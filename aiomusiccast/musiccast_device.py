@@ -382,7 +382,7 @@ class MusicCastDevice:
             self.data.api_version = self._device_info.get("api_version")
 
         self._name_text = await self.device.request_json(System.get_name_text(None))
-        zone_names = {zone.get("id"): zone.get("text") for zone in self._name_text.get("zone_list")}
+        zone_names = {zone.get("id"): zone.get("text") for zone in self._name_text.get("zone_list", [])}
 
         if not self._features:
             self._features = await self.device.request_json(System.get_features())
