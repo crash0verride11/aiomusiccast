@@ -480,7 +480,9 @@ class MusicCastDevice:
                 self.data.alarm_preset_list = clock_features.get("alarm_preset_list", [])
                 self.data.alarm_resume_input_list = clock_features.get("alarm_input_list", [])
 
-        self.data.input_names = {source.get("id"): source.get("text") for source in self._name_text.get("input_list", [])}
+        self.data.input_names = {
+            source.get("id"): source.get("text") for source in self._name_text.get("input_list", [])
+        }
 
         self.data.sound_program_names = {
             program.get("id"): program.get("text") for program in self._name_text.get("sound_program_list", [])
