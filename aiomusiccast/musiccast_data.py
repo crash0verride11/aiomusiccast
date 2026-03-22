@@ -25,7 +25,7 @@ class Category(IntEnum):
     DESKTOP_AUDIO_1 = 6
 
     @classmethod
-    def _missing_(cls, _value: object) -> "Category":
+    def _missing_(cls, _value: object) -> Category:
         """Return UNKNOWN for any unrecognised category code."""
         return cls.UNKNOWN
 
