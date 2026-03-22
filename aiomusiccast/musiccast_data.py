@@ -11,7 +11,10 @@ from .features import ZoneFeature
 
 
 class Category(IntEnum):
-    """Device category reported by the MusicCast API via category_code."""
+    """Device category reported by the MusicCast API.
+
+    Identified by the category_code field in the device info response.
+    """
 
     UNKNOWN = 0
     AV_RECEIVER = 1
@@ -22,7 +25,7 @@ class Category(IntEnum):
     DESKTOP_AUDIO_1 = 6
 
     @classmethod
-    def _missing_(cls, value: object) -> "Category":
+    def _missing_(cls, _value: object) -> "Category":
         """Return UNKNOWN for any unrecognised category code."""
         return cls.UNKNOWN
 
