@@ -1,4 +1,4 @@
-from aiomusiccast.features import DeviceFeature, ZoneFeature
+from .features import DeviceFeature, ZoneFeature
 
 DEVICE_FUNC_LIST_TO_FEATURE_MAPPING = {
     "wired_lan": DeviceFeature.WIRED_LAN,
