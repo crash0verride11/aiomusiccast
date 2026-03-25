@@ -18,7 +18,7 @@ from urllib.parse import urlparse
 import aiohttp
 from aiohttp import ClientError, ClientResponse, ClientTimeout
 
-from aiomusiccast.exceptions import (
+from .exceptions import (
     MusicCastConfigurationException,
     MusicCastConnectionException,
     MusicCastParamException,
