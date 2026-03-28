@@ -12,7 +12,7 @@ from xml.sax.saxutils import escape
 
 from aiohttp import ClientSession
 
-from aiomusiccast.const import (
+from .const import (
     ALARM_ONEDAY,
     ALARM_WEEK_DAYS,
     ALARM_WEEKLY,
@@ -25,7 +25,7 @@ from aiomusiccast.const import (
     DeviceFeature,
     ZoneFeature,
 )
-from aiomusiccast.exceptions import (
+from .exceptions import (
     MusicCastException,
     MusicCastGroupException,
     MusicCastUnsupportedException,
@@ -148,6 +148,13 @@ class MusicCastDevice:
                     zone.power = new_zone_data.get("power", zone.power)
                     zone.mute = new_zone_data.get("mute", zone.mute)
                     await self._update_input(parameter, new_zone_data.get("input", zone.input))
+                    if "volume" in new_zone_data and zone.actual_volume is not None:
+                        actual_range = zone.range_step.get("actual_volume_db")
+                        if actual_range:
+                            zone.actual_volume = (
+                                actual_range.minimum
+                                + (zone.current_volume - zone.min_volume) * actual_range.step
+                            )
                 else:
                     _LOGGER.warning(
                         "Zone %s does not exist. Available zones are: %s",
@@ -266,6 +273,10 @@ class MusicCastDevice:
         zone_data.mute = zone.get("mute")
         zone_data.sound_program = zone.get("sound_program")
         zone_data.sleep_time = zone.get("sleep")
+
+        actual_volume_data = zone.get("actual_volume")
+        if actual_volume_data is not None and actual_volume_data.get("mode") == "db":
+            zone_data.actual_volume = actual_volume_data.get("value")
 
         zone_data.extra_bass = zone.get("extra_bass")
         zone_data.bass_extension = zone.get("bass_extension")
@@ -544,6 +555,16 @@ class MusicCastDevice:
     async def mute_volume(self, zone_id, mute):
         """Mute the volume."""
         await self.device.request(Zone.set_mute(zone_id, mute))
+
+    @_check_feature(ZoneFeature.ACTUAL_VOLUME)
+    async def set_volume_db(self, zone_id, volume_db: float):
+        """Set the volume level using a dB value as displayed on the receiver."""
+        zone = self.data.zones[zone_id]
+        actual_range = zone.range_step["actual_volume_db"]
+        step = round(
+            (volume_db - actual_range.minimum) / actual_range.step
+        ) + zone.min_volume
+        await self.device.request(Zone.set_volume(zone_id, step, 1))
 
     async def set_volume_level(self, zone_id, volume):
         """Set the volume level, range 0..1."""

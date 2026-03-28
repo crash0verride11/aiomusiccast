@@ -246,6 +246,21 @@ _zone_capabilities: dict[ZoneFeature, ZoneCapabilityFactory | dict[str, ZoneCapa
         lambda: device.data.zones[zone_id].adaptive_drc,
         lambda val: device.set_adaptive_drc(zone_id, val),
     ),
+    ZoneFeature.ACTUAL_VOLUME: lambda capability_id, device, zone_id: (
+        NumberSetter(
+            capability_id,
+            "Actual Volume",
+            EntityType.REGULAR,
+            lambda: device.data.zones[zone_id].actual_volume,
+            lambda val: device.set_volume_db(zone_id, val),
+            device.data.zones[zone_id].range_step["actual_volume_db"].minimum,
+            device.data.zones[zone_id].range_step["actual_volume_db"].maximum,
+            device.data.zones[zone_id].range_step["actual_volume_db"].step,
+            unit="dB",
+        )
+        if "actual_volume_db" in device.data.zones[zone_id].range_step
+        else None
+    ),
     ZoneFeature.SUBWOOFER_VOLUME: lambda capability_id, device, zone_id: NumberSetter(
         capability_id,
         "Subwoofer Volume",

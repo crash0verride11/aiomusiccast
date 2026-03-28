@@ -5,7 +5,7 @@ from collections.abc import Awaitable, Callable, Mapping
 from enum import Enum
 from typing import Any
 
-from aiomusiccast.musiccast_data import RangeStep
+from .musiccast_data import RangeStep
 
 
 class EntityType(Enum):
@@ -141,9 +141,10 @@ class NumberSetter(SettableCapability):
         entity_type: EntityType,
         get_value: Callable[[], Any],
         set_value: Callable[[Any], Awaitable[None]],
-        min_value: int,
-        max_value: int,
-        step: int,
+        min_value: float,
+        max_value: float,
+        step: float,
+        unit: str | None = None,
     ) -> None:
         """Initialize a NumberSetter.
 
@@ -165,11 +166,14 @@ class NumberSetter(SettableCapability):
             Maximum value, which can be set
         step : Any
             The step between minimum and maximum
+        unit : str | None
+            Optional physical unit of measurement (e.g. "dB")
         """
         super().__init__(capability_id, name, entity_type, get_value, set_value)
         self.value_range = RangeStep(min_value, max_value, step)
+        self.unit = unit
 
-    async def set(self, value: int) -> None:
+    async def set(self, value: float) -> None:
         self.value_range.check(value)
         await super().set(value)
 

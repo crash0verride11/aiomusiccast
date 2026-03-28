@@ -164,6 +164,7 @@ class MusicCastZoneData:
         self.sound_program_list: list[str] = []
         self.sound_program: str | None = None
         self.sleep_time: int | None = None
+        self.actual_volume: float | None = None
         self.subwoofer_volume: int | None = None
 
         # Equalizer
@@ -211,12 +212,12 @@ class MusicCastZoneData:
 
 @dataclass(slots=True)
 class RangeStep:
-    minimum: int = 0
-    maximum: int = 0
-    step: int = 1
+    minimum: float = 0
+    maximum: float = 0
+    step: float = 1
 
-    def check(self, value: int) -> None:
-        if value > self.maximum or value < self.minimum or value % self.step:
+    def check(self, value: float) -> None:
+        if value > self.maximum or value < self.minimum or round(value % self.step, 10):
             raise MusicCastException(
                 "Given value %s is not in range of %s to %s with step %s", value, self.minimum, self.maximum, self.step
             )
