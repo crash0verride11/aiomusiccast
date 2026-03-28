@@ -270,6 +270,16 @@ _zone_capabilities: dict[ZoneFeature, ZoneCapabilityFactory | dict[str, ZoneCapa
         lambda: device.data.zones[zone_id].surround_3d,
         lambda val: device.set_surround_3d(zone_id, val),
     ),
+    ZoneFeature.SCENE: lambda capability_id, device, zone_id: [
+        Scene(
+            f"{capability_id}_{num}",
+            num,
+            lambda n: device.data.zones[zone_id].scene_information[n],
+            EntityType.CONFIG,
+            lambda n=num: device.recall_scene(zone_id, n),
+        )
+        for num in (device.data.zones[zone_id].scene_information or {})
+    ],
 }
 
 
