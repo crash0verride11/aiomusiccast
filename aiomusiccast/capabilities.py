@@ -253,7 +253,7 @@ class Scene(Capability):
         activate : Callable[[], Awaitable[None]]
             Async callable that recalls/activates this scene on the device.
         """
-        super().__init__(capability_id, None, entity_type)
+        super().__init__(capability_id, "", entity_type)
         self._num = num
         self._title_getter = title_getter
         self._activate = activate

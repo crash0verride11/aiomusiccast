@@ -372,8 +372,7 @@ class MusicCastDevice:
     async def _fetch_scenes(self, zone_id: str) -> None:
         scene_data = await self.device.request_json(Zone.get_scene_info(zone_id))
         self.data.zones[zone_id].scene_information = {
-            scene["num"]: scene["text"]
-            for scene in scene_data.get("scene_list", [])
+            scene["num"]: scene["text"] for scene in scene_data.get("scene_list", [])
         }
 
     async def fetch(self):
