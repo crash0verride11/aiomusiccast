@@ -19,6 +19,10 @@
 
 # Setup
 
+## crash0verride Compilation
+
+This is a compilation of my own fixes and those of others in the upstream aiomusiccast while the maintainer review the pulls in question, for use in HACS.
+
 ## Requirements
 
 * Python 3.10–3.14
