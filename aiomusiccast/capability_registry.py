@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
-from .capabilities import BinarySetter, Capability, EntityType, NumberSetter, OptionSetter
+from .capabilities import BinarySetter, Capability, EntityType, NumberSetter, OptionSetter, Scene
 from .const import DISPLAY_DIMMER_SPECIALS
 from .features import DeviceFeature, ZoneFeature
 
@@ -270,6 +270,16 @@ _zone_capabilities: dict[ZoneFeature, ZoneCapabilityFactory | dict[str, ZoneCapa
         lambda: device.data.zones[zone_id].surround_3d,
         lambda val: device.set_surround_3d(zone_id, val),
     ),
+    ZoneFeature.SCENE: lambda capability_id, device, zone_id: [
+        Scene(
+            f"{capability_id}_{num}",
+            num,
+            lambda n: device.data.zones[zone_id].scene_information[n],
+            EntityType.CONFIG,
+            lambda n=num: device.recall_scene(zone_id, n),
+        )
+        for num in (device.data.zones[zone_id].scene_information or {})
+    ],
 }
 
 
@@ -304,7 +314,13 @@ def build_zone_capabilities(device: MusicCastDevice, zone_id: str) -> list[Capab
             if isinstance(feature_entry, dict):
                 for key, capability in feature_entry.items():
                     capability_id = f"zone_{feature.name}_{key}"
-                    result.append(capability(capability_id, device, zone_id))
+                    cap = capability(capability_id, device, zone_id)
+                    if cap is not None:
+                        result.append(cap)
             else:
-                result.append(feature_entry(f"zone_{feature.name}", device, zone_id))
+                cap_or_list = feature_entry(f"zone_{feature.name}", device, zone_id)
+                if isinstance(cap_or_list, list):
+                    result.extend(c for c in cap_or_list if c is not None)
+                elif cap_or_list is not None:
+                    result.append(cap_or_list)
     return result

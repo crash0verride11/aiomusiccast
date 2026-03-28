@@ -369,6 +369,12 @@ class MusicCastDevice:
         if DeviceFeature.DIMMER in self.features and "dimmer" in self._func_status and self.data.dimmer:
             self.data.dimmer.dimmer_current = self._func_status.get("dimmer")
 
+    async def _fetch_scenes(self, zone_id: str) -> None:
+        scene_data = await self.device.request_json(Zone.get_scene_info(zone_id))
+        self.data.zones[zone_id].scene_information = {
+            scene["num"]: scene["text"] for scene in scene_data.get("scene_list", [])
+        }
+
     async def fetch(self):
         """Fetch data from musiccast device."""
         if not self._network_status:
@@ -504,6 +510,8 @@ class MusicCastDevice:
 
         for zone in self._zone_ids:
             await self._fetch_zone(zone)
+            if ZoneFeature.SCENE in self.data.zones[zone].features:
+                await self._fetch_scenes(zone)
 
         ranges = self._features.get("system").get("range_step")
 
@@ -724,6 +732,11 @@ class MusicCastDevice:
     async def store_netusb_preset(self, preset):
         """Play the selected preset."""
         await self.device.get(NetUSB.store_preset(preset))
+
+    @_check_feature(ZoneFeature.SCENE)
+    async def recall_scene(self, zone_id: str, num: int) -> None:
+        """Activate the given scene in the specified zone."""
+        await self.device.get(Zone.recall_scene(zone_id, num))
 
     async def set_sleep_timer(self, zone_id, sleep_time=0):
         """Set sleep time."""

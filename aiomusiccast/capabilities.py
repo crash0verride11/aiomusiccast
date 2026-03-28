@@ -20,8 +20,38 @@ class Capability(ABC):
     """Base class for all capabilities."""
 
     id: str
-    name: str
+    _name: str
     entity_type: EntityType
+
+    def __init__(
+        self,
+        capability_id: str,
+        name: str,
+        entity_type: EntityType,
+    ) -> None:
+        """Initialize the base class and set general vars.
+
+        Parameters
+        ----------
+        capability_id : str
+            Unique ID of this capability.
+        name : str
+            Name that should be displayed in a UI.
+        entity_type : EntityType
+            Defines the type of entity the capability represents.
+        """
+        self.id = capability_id
+        self._name = name
+        self.entity_type = entity_type
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+
+class StatefulCapability(Capability):
+    """Base class for capabilities that expose a readable state."""
+
     get_value: Callable[[], Any]
 
     def __init__(
@@ -31,22 +61,20 @@ class Capability(ABC):
         entity_type: EntityType,
         get_value: Callable[[], Any],
     ) -> None:
-        """Initialize the base class and set general vars.
+        """Initialize the stateful base class.
 
         Parameters
         ----------
-        capability_id : Any
+        capability_id : str
             Unique ID of this capability.
-        name : Any
+        name : str
             Name that should be displayed in a UI.
-        entity_type : Any
+        entity_type : EntityType
             Defines the type of entity the capability represents.
         get_value : Callable[[], Any]
             Callback that returns the current value of the capability.
         """
-        self.id = capability_id
-        self.name = name
-        self.entity_type = entity_type
+        super().__init__(capability_id, name, entity_type)
         self.get_value = get_value
 
     @property
@@ -54,7 +82,7 @@ class Capability(ABC):
         return self.get_value()
 
 
-class SettableCapability(Capability, ABC):
+class SettableCapability(StatefulCapability, ABC):
     """Base class for a capability, which is not read only."""
 
     set_value: Callable[[Any], Awaitable[None]]
@@ -89,15 +117,15 @@ class SettableCapability(Capability, ABC):
         await self.set_value(value)
 
 
-class NumberSensor(Capability):
+class NumberSensor(StatefulCapability):
     pass
 
 
-class BinarySensor(Capability):
+class BinarySensor(StatefulCapability):
     pass
 
 
-class TextSensor(Capability):
+class TextSensor(StatefulCapability):
     pass
 
 
@@ -193,3 +221,47 @@ class BinarySetter(SettableCapability):
         if not isinstance(value, bool):
             raise ValueError("The given value is not a boolean value")
         await super().set(value)
+
+
+class Scene(Capability):
+    """A capability to recall a named zone scene."""
+
+    _num: int
+    _title_getter: Callable[[int], str]
+    _activate: Callable[[], Awaitable[None]]
+
+    def __init__(
+        self,
+        capability_id: str,
+        num: int,
+        title_getter: Callable[[int], str],
+        entity_type: EntityType,
+        activate: Callable[[], Awaitable[None]],
+    ) -> None:
+        """Initialize a Scene capability.
+
+        Parameters
+        ----------
+        capability_id : str
+            Unique ID of this capability.
+        num : int
+            Scene number as reported by the device.
+        title_getter : Callable[[int], str]
+            Callable that accepts a scene number and returns its display name.
+        entity_type : EntityType
+            Defines the type of entity this capability represents.
+        activate : Callable[[], Awaitable[None]]
+            Async callable that recalls/activates this scene on the device.
+        """
+        super().__init__(capability_id, "", entity_type)
+        self._num = num
+        self._title_getter = title_getter
+        self._activate = activate
+
+    @property
+    def name(self) -> str:
+        return f"{self._num}: {self._title_getter(self._num)}"
+
+    async def activate(self) -> None:
+        """Recall this scene on the device."""
+        await self._activate()
