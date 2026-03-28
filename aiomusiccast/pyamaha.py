@@ -285,7 +285,7 @@ class AsyncDevice:
         uri : Any
             URI to request
         """
-        return await self.client.get(uri.format(host=self.ip), headers=self._headers, timeout=ClientTimeout(total=5))
+        return await self.client.get(uri.format(host=self.ip), headers=self._headers, timeout=ClientTimeout(total=8))
 
     # end-of-method get
 
@@ -1037,6 +1037,7 @@ class Zone:
         "SET_SOUND_PROGRAM": "http://{host}/YamahaExtendedControl/v1/{zone}/setSoundProgram?program={program}",
         "PREPARE_INPUT_CHANGE": "http://{host}/YamahaExtendedControl/v1/{zone}/prepareInputChange?input={input}",
         "SET_SURROUND_3D": "http://{host}/YamahaExtendedControl/v1/{zone}/set3dSurround?enable={enable}",
+        "SET_SURROUND_AI": "http://{host}/YamahaExtendedControl/v1/{zone}/setSurroundAI?enable={enable}",
         "SET_DIRECT": "http://{host}/YamahaExtendedControl/v1/{zone}/setDirect?enable={enable}",
         "SET_PURE_DIRECT": "http://{host}/YamahaExtendedControl/v1/{zone}/setPureDirect?enable={enable}",
         "SET_ENHANCER": "http://{host}/YamahaExtendedControl/v1/{zone}/setEnhancer?enable={enable}",
@@ -1246,6 +1247,24 @@ class Zone:
         return Zone.URI["SET_SURROUND_3D"].format(host="{host}", zone=zone, enable=_bool_to_str(enable))
 
     # end-of-method set_surround_3d
+
+    @staticmethod
+    def set_surround_ai(zone, enable):
+        """For setting Surround AI status.
+
+        Parameters
+        ----------
+        zone : Any
+            Specifies target Zone. Values: 'main', 'zone2', 'zone3', 'zone4'
+        enable : Any
+            Specifies Surround AI status.
+        """
+        assert zone in ZONES, "Invalid ZONE value!"
+        return Zone.URI["SET_SURROUND_AI"].format(
+            host="{host}", zone=zone, enable=_bool_to_str(enable)
+        )
+
+    # end-of-method set_surround_ai
 
     @staticmethod
     def set_direct(zone, enable):

@@ -270,6 +270,13 @@ _zone_capabilities: dict[ZoneFeature, ZoneCapabilityFactory | dict[str, ZoneCapa
         lambda: device.data.zones[zone_id].surround_3d,
         lambda val: device.set_surround_3d(zone_id, val),
     ),
+    ZoneFeature.SURROUND_AI: lambda capability_id, device, zone_id: BinarySetter(
+        capability_id,
+        "Surround AI",
+        EntityType.CONFIG,
+        lambda: device.data.zones[zone_id].surround_ai,
+        lambda val: device.set_surround_ai(zone_id, val),
+    ),
 }
 
 
@@ -304,7 +311,11 @@ def build_zone_capabilities(device: MusicCastDevice, zone_id: str) -> list[Capab
             if isinstance(feature_entry, dict):
                 for key, capability in feature_entry.items():
                     capability_id = f"zone_{feature.name}_{key}"
-                    result.append(capability(capability_id, device, zone_id))
+                    cap = capability(capability_id, device, zone_id)
+                    if cap is not None:
+                        result.append(cap)
             else:
-                result.append(feature_entry(f"zone_{feature.name}", device, zone_id))
+                cap = feature_entry(f"zone_{feature.name}", device, zone_id)
+                if cap is not None:
+                    result.append(cap)
     return result
