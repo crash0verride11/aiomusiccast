@@ -148,6 +148,13 @@ class MusicCastDevice:
                     zone.power = new_zone_data.get("power", zone.power)
                     zone.mute = new_zone_data.get("mute", zone.mute)
                     await self._update_input(parameter, new_zone_data.get("input", zone.input))
+                    if "volume" in new_zone_data and zone.actual_volume is not None:
+                        actual_range = zone.range_step.get("actual_volume_db")
+                        if actual_range:
+                            zone.actual_volume = (
+                                actual_range.minimum
+                                + (zone.current_volume - zone.min_volume) * actual_range.step
+                            )
                 else:
                     _LOGGER.warning(
                         "Zone %s does not exist. Available zones are: %s",
@@ -267,6 +274,10 @@ class MusicCastDevice:
         zone_data.sound_program = zone.get("sound_program")
         zone_data.sleep_time = zone.get("sleep")
 
+        actual_volume_data = zone.get("actual_volume")
+        if actual_volume_data is not None and actual_volume_data.get("mode") == "db":
+            zone_data.actual_volume = actual_volume_data.get("value")
+
         zone_data.extra_bass = zone.get("extra_bass")
         zone_data.bass_extension = zone.get("bass_extension")
         zone_data.subwoofer_volume = zone.get("subwoofer_volume")
@@ -369,6 +380,12 @@ class MusicCastDevice:
 
         if DeviceFeature.DIMMER in self.features and "dimmer" in self._func_status and self.data.dimmer:
             self.data.dimmer.dimmer_current = self._func_status.get("dimmer")
+
+    async def _fetch_scenes(self, zone_id: str) -> None:
+        scene_data = await self.device.request_json(Zone.get_scene_info(zone_id))
+        self.data.zones[zone_id].scene_information = {
+            scene["num"]: scene["text"] for scene in scene_data.get("scene_list", [])
+        }
 
     async def fetch(self):
         """Fetch data from musiccast device."""
@@ -505,6 +522,8 @@ class MusicCastDevice:
 
         for zone in self._zone_ids:
             await self._fetch_zone(zone)
+            if ZoneFeature.SCENE in self.data.zones[zone].features:
+                await self._fetch_scenes(zone)
 
         ranges = self._features.get("system").get("range_step")
 
@@ -537,6 +556,16 @@ class MusicCastDevice:
     async def mute_volume(self, zone_id, mute):
         """Mute the volume."""
         await self.device.request(Zone.set_mute(zone_id, mute))
+
+    @_check_feature(ZoneFeature.ACTUAL_VOLUME)
+    async def set_volume_db(self, zone_id, volume_db: float):
+        """Set the volume level using a dB value as displayed on the receiver."""
+        zone = self.data.zones[zone_id]
+        actual_range = zone.range_step["actual_volume_db"]
+        step = round(
+            (volume_db - actual_range.minimum) / actual_range.step
+        ) + zone.min_volume
+        await self.device.request(Zone.set_volume(zone_id, step, 1))
 
     async def set_volume_level(self, zone_id, volume):
         """Set the volume level, range 0..1."""
@@ -730,6 +759,11 @@ class MusicCastDevice:
     async def store_netusb_preset(self, preset):
         """Play the selected preset."""
         await self.device.get(NetUSB.store_preset(preset))
+
+    @_check_feature(ZoneFeature.SCENE)
+    async def recall_scene(self, zone_id: str, num: int) -> None:
+        """Activate the given scene in the specified zone."""
+        await self.device.get(Zone.recall_scene(zone_id, num))
 
     async def set_sleep_timer(self, zone_id, sleep_time=0):
         """Set sleep time."""

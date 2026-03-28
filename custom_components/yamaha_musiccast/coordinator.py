@@ -7,6 +7,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from .aiomusiccast import MusicCastConnectionException
+from .aiomusiccast.capabilities import Scene
 from .aiomusiccast.musiccast_device import MusicCastData, MusicCastDevice
 
 from homeassistant.config_entries import ConfigEntry
@@ -33,6 +34,7 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
     ) -> None:
         """Initialize."""
         self.musiccast = client
+        self.selected_scenes: dict[str, Scene | None] = {}
 
         super().__init__(
             hass,

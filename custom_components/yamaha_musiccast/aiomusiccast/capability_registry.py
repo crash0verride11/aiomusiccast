@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
-from .capabilities import BinarySetter, Capability, EntityType, NumberSetter, OptionSetter
+from .capabilities import BinarySetter, Capability, EntityType, NumberSetter, OptionSetter, Scene
 from .const import DISPLAY_DIMMER_SPECIALS
 from .features import DeviceFeature, ZoneFeature
 
@@ -62,7 +62,7 @@ _device_capabilities: dict[DeviceFeature, DeviceCapabilityFactory | dict[str, De
         EntityType.CONFIG,
         lambda: device.data.speaker_pattern,
         lambda val: device.set_speaker_pattern(int(val)),
-        {num: f"Pattern {num}" for num in device.data.speaker_pattern_list},
+        {num: f"pattern_{num}" for num in device.data.speaker_pattern_list},
     ),
 }
 """Dictionary of all ZoneFeatures with a callable as value.
@@ -246,6 +246,21 @@ _zone_capabilities: dict[ZoneFeature, ZoneCapabilityFactory | dict[str, ZoneCapa
         lambda: device.data.zones[zone_id].adaptive_drc,
         lambda val: device.set_adaptive_drc(zone_id, val),
     ),
+    ZoneFeature.ACTUAL_VOLUME: lambda capability_id, device, zone_id: (
+        NumberSetter(
+            capability_id,
+            "Actual Volume",
+            EntityType.REGULAR,
+            lambda: device.data.zones[zone_id].actual_volume,
+            lambda val: device.set_volume_db(zone_id, val),
+            device.data.zones[zone_id].range_step["actual_volume_db"].minimum,
+            device.data.zones[zone_id].range_step["actual_volume_db"].maximum,
+            device.data.zones[zone_id].range_step["actual_volume_db"].step,
+            unit="dB",
+        )
+        if "actual_volume_db" in device.data.zones[zone_id].range_step
+        else None
+    ),
     ZoneFeature.SUBWOOFER_VOLUME: lambda capability_id, device, zone_id: NumberSetter(
         capability_id,
         "Subwoofer Volume",
@@ -277,6 +292,16 @@ _zone_capabilities: dict[ZoneFeature, ZoneCapabilityFactory | dict[str, ZoneCapa
         lambda: device.data.zones[zone_id].surround_ai,
         lambda val: device.set_surround_ai(zone_id, val),
     ),
+    ZoneFeature.SCENE: lambda capability_id, device, zone_id: [
+        Scene(
+            f"{capability_id}_{num}",
+            num,
+            lambda n: device.data.zones[zone_id].scene_information[n],
+            EntityType.CONFIG,
+            lambda n=num: device.recall_scene(zone_id, n),
+        )
+        for num in (device.data.zones[zone_id].scene_information or {})
+    ],
 }
 
 
@@ -315,7 +340,9 @@ def build_zone_capabilities(device: MusicCastDevice, zone_id: str) -> list[Capab
                     if cap is not None:
                         result.append(cap)
             else:
-                cap = feature_entry(f"zone_{feature.name}", device, zone_id)
-                if cap is not None:
-                    result.append(cap)
+                cap_or_list = feature_entry(f"zone_{feature.name}", device, zone_id)
+                if isinstance(cap_or_list, list):
+                    result.extend(c for c in cap_or_list if c is not None)
+                elif cap_or_list is not None:
+                    result.append(cap_or_list)
     return result

@@ -59,6 +59,7 @@ class NumberCapability(MusicCastCapabilityEntity, NumberEntity):
             if capability.unit == "dB":
                 self._attr_device_class = NumberDeviceClass.SIGNAL_STRENGTH
                 self._attr_icon = "mdi:knob"
+                self._attr_entity_registry_enabled_default = False
 
     @property
     def native_value(self) -> float | None:

@@ -122,18 +122,21 @@ class UrlBuilder:
     def build_query_str(cls, query_params: dict[str, str], **kwargs):
         if not all(param in query_params for param in kwargs):
             raise MusicCastParamException("Unknown parameter while building query string.")
-        if not all(param in kwargs for param, req in query_params.items() if req):
+        if not all(param in kwargs and kwargs.get(param) is not None for param, req in query_params.items() if req):
             raise MusicCastParamException("Not all required params were provided.")
         return urllib.parse.urlencode({key: val for key, val in kwargs.items() if val is not None})
 
     @classmethod
     def build_url(cls, url: tuple[str, dict[str, Any]], **kwargs: Any) -> str:
-        return f"{url[0]}?{cls.build_query_str(url[1], **kwargs)}"
+        query_str = cls.build_query_str(url[1], **kwargs)
+        return f"{url[0]}?{query_str}" if query_str else url[0]
 
     @classmethod
     def build_zone_url(cls, url: tuple[str, dict[str, Any]], zone: str, **kwargs: Any) -> str:
+        assert zone in ZONES, "Invalid ZONE value!"
         base_url = url[0].format(host="{host}", zone=zone)
-        return f"{base_url}?{cls.build_query_str(url[1], **kwargs)}"
+        query_str = cls.build_query_str(url[1], **kwargs)
+        return f"{base_url}?{query_str}" if query_str else base_url
 
 
 class AsyncDevice:
@@ -1063,6 +1066,18 @@ class Zone:
         "SET_LINK_AUDIO_QUALITY": "http://{host}/YamahaExtendedControl/v1/{zone}/setLinkAudioQuality?mode={mode}",
         "SET_ADAPTIVE_DRC": "http://{host}/YamahaExtendedControl/v1/{zone}/setAdaptiveDrc?enable={enable}",
         "SET_SURR_DECODER_TYPE": "http://{host}/YamahaExtendedControl/v1/{zone}/setSurroundDecoderType?type={option}",
+        "GET_SCENE_INFO": (
+            "http://{host}/YamahaExtendedControl/v1/{zone}/getSceneInfo",
+            {"num": False},
+        ),
+        "SET_SCENE_INFO": (
+            "http://{host}/YamahaExtendedControl/v1/{zone}/setSceneInfo",
+            {},
+        ),
+        "RECALL_SCENE": (
+            "http://{host}/YamahaExtendedControl/v1/{zone}/recallScene",
+            {"num": True},
+        ),
     }
 
     @staticmethod
@@ -1598,6 +1613,50 @@ class Zone:
         """
         assert zone in ZONES, "Invalid ZONE value!"
         return Zone.URI["SET_SURR_DECODER_TYPE"].format(host="{host}", zone=zone, option=option)
+
+    @classmethod
+    def get_scene_info(cls, zone: str, num: int | None = None) -> str:
+        """Return the URL to retrieve scene information for a zone.
+
+        Parameters
+        ----------
+        zone : str
+            Target zone. Values: 'main', 'zone2', 'zone3', 'zone4'.
+        num : int | None
+            Scene number to fetch. When omitted all scenes are returned.
+        """
+        return UrlBuilder.build_zone_url(Zone.URI["GET_SCENE_INFO"], zone, num=num)
+
+    @classmethod
+    def set_scene_info(cls, zone: str, num: int, text: str) -> tuple[str, dict]:
+        """Return the URL and body to update a scene's display name.
+
+        Parameters
+        ----------
+        zone : str
+            Target zone. Values: 'main', 'zone2', 'zone3', 'zone4'.
+        num : int
+            Scene number to update.
+        text : str
+            New display name for the scene.
+        """
+        return (
+            UrlBuilder.build_zone_url(Zone.URI["SET_SCENE_INFO"], zone),
+            {"num": str(num), "text": text},
+        )
+
+    @classmethod
+    def recall_scene(cls, zone: str, num: int) -> str:
+        """Return the URL to activate a scene in the given zone.
+
+        Parameters
+        ----------
+        zone : str
+            Target zone. Values: 'main', 'zone2', 'zone3', 'zone4'.
+        num : int
+            Scene number to activate.
+        """
+        return UrlBuilder.build_zone_url(Zone.URI["RECALL_SCENE"], zone, num=num)
 
 
 # end-of-class Zone

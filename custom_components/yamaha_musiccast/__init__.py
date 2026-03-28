@@ -13,10 +13,11 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
+from .aiomusiccast.capabilities import Scene
 from .const import CONF_SERIAL, CONF_UPNP_DESC, DOMAIN
 from .coordinator import MusicCastDataUpdateCoordinator
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SELECT, Platform.SWITCH]
+PLATFORMS = [Platform.BUTTON, Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SELECT, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,6 +60,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = MusicCastDataUpdateCoordinator(hass, entry, client=client)
     await coordinator.async_config_entry_first_refresh()
     coordinator.musiccast.build_capabilities()
+
+    for zone_id, zone_data in coordinator.data.zones.items():
+        first_scene = next(
+            (c for c in zone_data.capabilities if isinstance(c, Scene)), None
+        )
+        if first_scene is not None:
+            coordinator.selected_scenes[zone_id] = first_scene
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
