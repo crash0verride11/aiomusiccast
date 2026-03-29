@@ -1,4 +1,4 @@
-<div align="center">
+<!--<div align="center">
 
 <picture>
   <source srcset="banner-dark.png" media="(prefers-color-scheme: dark)">
@@ -16,12 +16,17 @@
 </div>
 
 <br/>
+-->
+
+# crash0verride Compilation
+
+This is a compilation of my own fixes and those of others in the upstream aiomusiccast while the maintainer(s) review the pulls in question. Changes have been made on the HA component layer to incorporate new features in the aiomusiccast library
+
+### Actual Volume
+
+I used the YXC integration as an example to incorporate a db based volume slider, that should be disabled by default, as this more directly correlates with the way the receiver is used than a percent value.
 
 # Setup
-
-## crash0verride Compilation
-
-This is a compilation of my own fixes and those of others in the upstream aiomusiccast while the maintainer review the pulls in question, for use in HACS.
 
 ## Requirements
 
