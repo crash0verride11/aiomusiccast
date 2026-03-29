@@ -87,7 +87,7 @@ class ZoneSceneSelect(MusicCastDeviceEntity, SelectEntity):
             for cap in coordinator.data.zones[zone_id].capabilities
             if isinstance(cap, Scene)
         }
-        super().__init__(name="Scene", icon="mdi:palette", coordinator=coordinator)
+        super().__init__(name="Scene", icon="mdi:multimedia", coordinator=coordinator)
         self._attr_options = list(self._scenes.keys())
         selected = coordinator.selected_scenes.get(zone_id)
         self._attr_current_option = selected.name if selected is not None else None

@@ -41,7 +41,7 @@ class ZoneSceneButton(MusicCastDeviceEntity, ButtonEntity):
         self._zone_id = zone_id
         super().__init__(
             name="Set Scene",
-            icon="mdi:play-circle",
+            icon="mdi:play-box-multiple",
             coordinator=coordinator,
         )
 
