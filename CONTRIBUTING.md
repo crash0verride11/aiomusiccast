@@ -27,8 +27,8 @@ Run the test suite:
 $ uv run pytest
 ```
 
-Docstrings follow the NumPy convention; the pre-commit hooks (docformatter and Ruff) keep them consistent. Run the
-full hook suite (Ruff format and lint, docformatter, mypy):
+Docstrings follow the NumPy convention, which Ruff's pydocstyle rules enforce. Run the full hook suite (Ruff format and
+lint, mypy):
 
 ```text
 $ uv run pre-commit run --all-files

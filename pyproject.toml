@@ -38,7 +38,6 @@ Changelog = "https://github.com/crash0verride11/aiomusiccast/blob/aiomusiccast-c
 
 [dependency-groups]
 dev = [
-    "docformatter[tomli]>=1.7.7",
     "ipython>=8.24.0",
     "mypy>=1.8.0",
     "pre-commit>=3.7.0",
@@ -85,11 +84,6 @@ exclude_commit_patterns = [
 
 [tool.semantic_release.changelog.default_templates]
 changelog_file = "CHANGELOG.md"
-
-[tool.docformatter]
-wrap-descriptions = 72
-wrap-summaries = 72
-pre-summary-newline = false
 
 [tool.ruff]
 line-length = 120

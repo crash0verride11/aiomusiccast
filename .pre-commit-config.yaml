@@ -15,14 +15,6 @@ repos:
       - id: trailing-whitespace
   - repo: local
     hooks:
-      - id: docformatter
-        name: docformatter
-        language: system
-        entry: uv run --dev docformatter --config pyproject.toml --in-place
-        types_or: [python]
-        require_serial: true
-  - repo: local
-    hooks:
       - id: ruff-format
         name: ruff format
         language: system
