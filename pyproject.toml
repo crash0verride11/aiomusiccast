@@ -42,6 +42,9 @@ dev = [
     "ipython>=8.24.0",
     "mypy>=1.8.0",
     "pre-commit>=3.7.0",
+    "pytest>=9.2.0",
+    "pytest-asyncio>=1.4.1.post1",
+    "pytest-cov>=7.1.0",
     "ruff>=0.5.0",
 ]
 
