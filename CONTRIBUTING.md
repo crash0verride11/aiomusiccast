@@ -2,11 +2,8 @@
 
 ## Requirements
 
-* Python 3.10–3.14 (for example via [pyenv](https://github.com/pyenv/pyenv#installation))
+* Python 3.11+
 * uv: [https://docs.astral.sh/uv/getting-started/installation/](https://docs.astral.sh/uv/getting-started/installation/)
-* Graphviz (only required for UML/doc generation):
-    * macOS: `$ brew install graphviz`
-    * Linux / Windows: [https://graphviz.org/download](https://graphviz.org/download/)
 
 ## Installation
 
@@ -24,61 +21,51 @@ $ uv run pre-commit install --install-hooks
 
 # Development Tasks
 
-## Manual
-
-There is no automated test suite yet. Static checks are the primary safety net.
-
-Docstrings follow the NumPy convention; the pre-commit hooks (docformatter and
-Ruff) keep them consistent automatically.
-
-Run formatting and static analysis:
+Run the test suite:
 
 ```text
-$ uv run ruff format aiomusiccast
-$ uv run ruff check aiomusiccast
-$ uv run mypy aiomusiccast --config-file=.mypy.ini
+$ uv run pytest
 ```
 
-Build the documentation:
-
-```text
-$ uv run mkdocs build --clean --strict
-```
-
-## Automatic
-
-Use your editor’s on-save hooks or a simple watcher such as `entr` to rerun the commands above, e.g.
-`find aiomusiccast -name '*.py' | entr -r uv run ruff check aiomusiccast`.
-
-You can also run the full hook suite manually:
+Docstrings follow the NumPy convention; the pre-commit hooks (docformatter and Ruff) keep them consistent. Run the
+full hook suite (Ruff format and lint, docformatter, mypy):
 
 ```text
 $ uv run pre-commit run --all-files
 ```
 
+# Commit Messages
+
+Commits must follow [Conventional Commits](https://www.conventionalcommits.org); CI checks this with commitlint. The
+commit type decides the next release:
+
+| Type | Example | Release |
+|------|---------|---------|
+| `fix:` | `fix: handle missing zone list` | patch (0.16.0 → 0.16.1) |
+| `feat:` | `feat: add surround AI` | minor (0.16.0 → 0.17.0) |
+| `chore:`, `ci:`, `docs:`, `test:`, `refactor:` | `docs: update README` | none |
+
+While the version is below 1.0, breaking changes (`feat!:` or a `BREAKING CHANGE:` footer) also bump the minor
+version.
+
 # Continuous Integration
 
-CI runs the same Ruff and mypy checks defined above.
-
-# Demo Tasks
-
-Run the program:
-
-```text
-$ uv run python aiomusiccast/__main__.py
-```
-
-Launch an IPython session:
-
-```text
-$ uv run ipython --ipython-dir=notebooks
-```
+Every pull request and every push to `aiomusiccast-co` runs pre-commit, commitlint and pytest on Python 3.11–3.14.
 
 # Release Tasks
 
-Release to PyPI:
+Releases are automatic. When a push to `aiomusiccast-co` passes CI and contains a `feat:` or `fix:` commit,
+python-semantic-release:
+
+1. bumps the version in `pyproject.toml`, `aiomusiccast_co/__init__.py` and `uv.lock`,
+2. updates `CHANGELOG.md` and commits it as `chore(release): <version>`,
+3. tags `v<version>` and creates the GitHub release,
+4. publishes the build to PyPI as `aiomusiccast-co` (trusted publishing, no token).
+
+Don't edit the version or `CHANGELOG.md` by hand, and don't create releases or tags manually.
+
+To preview the next version locally:
 
 ```text
-$ uv build
-$ UV_PUBLISH_TOKEN=... uv publish
+$ uvx --from python-semantic-release semantic-release --noop version --print
 ```
