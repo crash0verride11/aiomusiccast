@@ -1275,9 +1275,7 @@ class Zone:
             Specifies Surround AI status.
         """
         assert zone in ZONES, "Invalid ZONE value!"
-        return Zone.URI["SET_SURROUND_AI"].format(
-            host="{host}", zone=zone, enable=_bool_to_str(enable)
-        )
+        return Zone.URI["SET_SURROUND_AI"].format(host="{host}", zone=zone, enable=_bool_to_str(enable))
 
     # end-of-method set_surround_ai
 
@@ -2394,4 +2392,4 @@ def _bool_to_str(value):
 
 
 if __name__ == "__main__":
-    raise SystemExit("aiomusiccast.pyamaha is a library module")
+    raise SystemExit("aiomusiccast_co.pyamaha is a library module")

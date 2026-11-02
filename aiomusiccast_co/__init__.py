@@ -1,5 +1,3 @@
-from importlib import metadata
-
 from .exceptions import MusicCastConnectionException, MusicCastException, MusicCastGroupException
 from .features import DeviceFeature, ZoneFeature
 from .musiccast_data import MusicCastData, MusicCastZoneData
@@ -20,10 +18,5 @@ __all__ = [
     "ZoneFeature",
 ]
 
-# Placeholder value replaced via `hatch version`.
-__version__ = "0.0.0"
-
-try:
-    __version__ = metadata.version("aiomusiccast")
-except metadata.PackageNotFoundError:
-    __version__ = "(local)"
+# Updated by python-semantic-release on each release.
+__version__ = "0.15.0"

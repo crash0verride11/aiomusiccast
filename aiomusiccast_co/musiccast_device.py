@@ -5,13 +5,14 @@ import logging
 import math
 import mimetypes
 from collections.abc import Awaitable, Callable
-from datetime import datetime, time, timezone
+from datetime import UTC, datetime, time
 from functools import wraps
 from typing import Any, ParamSpec, TypeVar
 from xml.sax.saxutils import escape
 
 from aiohttp import ClientSession
 
+from .capability_registry import build_device_capabilities, build_zone_capabilities
 from .const import (
     ALARM_ONEDAY,
     ALARM_WEEK_DAYS,
@@ -30,8 +31,6 @@ from .exceptions import (
     MusicCastGroupException,
     MusicCastUnsupportedException,
 )
-
-from .capability_registry import build_device_capabilities, build_zone_capabilities
 from .features import Feature
 from .musiccast_data import Category, Dimmer, MusicCastAlarmDetails, MusicCastData, MusicCastZoneData, RangeStep
 from .pyamaha import AsyncDevice, Clock, Dist, NetUSB, System, Tuner, Zone
@@ -152,8 +151,7 @@ class MusicCastDevice:
                         actual_range = zone.range_step.get("actual_volume_db")
                         if actual_range:
                             zone.actual_volume = (
-                                actual_range.minimum
-                                + (zone.current_volume - zone.min_volume) * actual_range.step
+                                actual_range.minimum + (zone.current_volume - zone.min_volume) * actual_range.step
                             )
                 else:
                     _LOGGER.warning(
@@ -173,7 +171,7 @@ class MusicCastDevice:
             play_time = netusb_message.get("play_time")
             if play_time:
                 self.data.netusb_play_time = play_time
-                self.data.netusb_play_time_updated = datetime.now(timezone.utc)
+                self.data.netusb_play_time_updated = datetime.now(UTC)
 
             if netusb_message.get("preset_info_updated"):
                 await self._fetch_netusb_presets()
@@ -243,7 +241,7 @@ class MusicCastDevice:
         self.data.netusb_total_time = self._netusb_play_info.get("total_time", None)
         self.data.netusb_play_time = self._netusb_play_info.get("play_time", None)
 
-        self.data.netusb_play_time_updated = datetime.now(timezone.utc)
+        self.data.netusb_play_time_updated = datetime.now(UTC)
 
     async def _fetch_tuner(self):
         """Fetch tuner data."""
@@ -418,7 +416,7 @@ class MusicCastDevice:
                     self.features |= feature_bit
                 else:
                     _LOGGER.info(
-                        "The model %s supports the feature %s which is not known to aiomusiccast. Please consider "
+                        "The model %s supports the feature %s which is not known to aiomusiccast-co. Please consider "
                         "opening an issue on GitHub to tell us about this feature so we can implement it.",
                         self.data.model_name,
                         feature,
@@ -459,7 +457,7 @@ class MusicCastDevice:
                         zone_data.features |= feature_bit
                     else:
                         _LOGGER.info(
-                            "Zone %s of model %s supports the feature %s which is not known to aiomusiccast. Please "
+                            "Zone %s of model %s supports the feature %s which is not known to aiomusiccast-co. Please "
                             "consider opening an issue on GitHub to tell us about this feature so we can implement it.",
                             zone_id,
                             self.data.model_name,
@@ -503,7 +501,9 @@ class MusicCastDevice:
                 self.data.alarm_preset_list = clock_features.get("alarm_preset_list", [])
                 self.data.alarm_resume_input_list = clock_features.get("alarm_input_list", [])
 
-        self.data.input_names = {source.get("id"): source.get("text") for source in self._name_text.get("input_list", [])}
+        self.data.input_names = {
+            source.get("id"): source.get("text") for source in self._name_text.get("input_list", [])
+        }
 
         self.data.sound_program_names = {
             program.get("id"): program.get("text") for program in self._name_text.get("sound_program_list", [])
@@ -559,12 +559,10 @@ class MusicCastDevice:
 
     @_check_feature(ZoneFeature.ACTUAL_VOLUME)
     async def set_volume_db(self, zone_id, volume_db: float):
-        """Set the volume level using a dB value as displayed on the receiver."""
+        """Set the volume using the dB value shown on the receiver."""
         zone = self.data.zones[zone_id]
         actual_range = zone.range_step["actual_volume_db"]
-        step = round(
-            (volume_db - actual_range.minimum) / actual_range.step
-        ) + zone.min_volume
+        step = round((volume_db - actual_range.minimum) / actual_range.step) + zone.min_volume
         await self.device.request(Zone.set_volume(zone_id, step, 1))
 
     async def set_volume_level(self, zone_id, volume):

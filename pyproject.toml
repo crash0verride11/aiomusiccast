@@ -3,21 +3,24 @@ requires = ["hatchling>=1.25.0"]
 build-backend = "hatchling.build"
 
 [project]
-name = "aiomusiccast"
-dynamic = ["version"]
-description = "Companion library for musiccast devices intended for the Home Assistant integration."
+name = "aiomusiccast-co"
+version = "0.15.0"
+description = "Asyncio library for Yamaha MusicCast devices; maintained fork of aiomusiccast for the Home Assistant integration."
 readme = "README.md"
 license = { file = "LICENSE.md" }
 authors = [{ name = "Tom Schneider", email = "mail@vigonotion.com" }]
-requires-python = ">=3.10"
-keywords = []
+maintainers = [{ name = "crash0verride11" }]
+requires-python = ">=3.11"
+keywords = ["yamaha", "musiccast", "asyncio", "home-assistant"]
 classifiers = [
-    "Development Status :: 1 - Planning",
+    "Development Status :: 4 - Beta",
+    "Framework :: AsyncIO",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -28,12 +31,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://pypi.org/project/aiomusiccast"
-Documentation = "https://aiomusiccast.readthedocs.io"
-Repository = "https://github.com/vigonotion/aiomusiccast"
-
-[tool.hatch.version]
-path = "aiomusiccast/__init__.py"
+Homepage = "https://github.com/crash0verride11/aiomusiccast"
+Repository = "https://github.com/crash0verride11/aiomusiccast"
+"Bug Tracker" = "https://github.com/crash0verride11/aiomusiccast/issues"
+Changelog = "https://github.com/crash0verride11/aiomusiccast/blob/aiomusiccast-co/CHANGELOG.md"
 
 [dependency-groups]
 dev = [
@@ -51,7 +52,7 @@ pre-summary-newline = false
 
 [tool.ruff]
 line-length = 120
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.format]
 quote-style = "double"

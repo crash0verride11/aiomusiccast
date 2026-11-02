@@ -40,7 +40,7 @@ repos:
       - id: mypy
         name: mypy
         language: system
-        entry: uv run --dev mypy aiomusiccast --config-file=.mypy.ini
+        entry: uv run --dev mypy aiomusiccast_co --config-file=.mypy.ini
         types_or: [python, pyi, toml, yaml]
         pass_filenames: false
         require_serial: true
