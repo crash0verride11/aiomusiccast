@@ -5,3 +5,51 @@ Releases of `aiomusiccast-co`, the maintained fork of
 python-semantic-release; earlier history is in upstream's releases up to 0.15.0.
 
 <!-- version list -->
+
+## v0.16.0 (2026-11-02)
+
+### Bug Fixes
+
+- Input_list iterating over None causing error
+  ([`1fd11b4`](https://github.com/crash0verride11/aiomusiccast/commit/1fd11b460635670cf5e1bd013a94d5f80e07d4bc))
+
+- Missing capability_registry section
+  ([`2e28a2a`](https://github.com/crash0verride11/aiomusiccast/commit/2e28a2a36346908f3015b63941be17208069e595))
+
+- Zone_list iterating over None causing error
+  ([`dcaef64`](https://github.com/crash0verride11/aiomusiccast/commit/dcaef64045a942607c3303a6030250b62d34c4a1))
+
+### Documentation
+
+- Rewrite README and CONTRIBUTING for aiomusiccast-co
+  ([`2b199e5`](https://github.com/crash0verride11/aiomusiccast/commit/2b199e504f5706977f855a2fd8cf5878ce8c1116))
+
+### Features
+
+- Add actual volume (-80.5–16.5+ db)
+  ([`11c30cc`](https://github.com/crash0verride11/aiomusiccast/commit/11c30ccb14dd74f84f539ed2ed00181c8e29b01c))
+
+- Add surround ai, fix: increase timeout to 8s
+  ([`a5f35f6`](https://github.com/crash0verride11/aiomusiccast/commit/a5f35f63cdf8cec62cb04f2a9fe8e7ad9beb9181))
+
+- Category code
+  ([`cafca17`](https://github.com/crash0verride11/aiomusiccast/commit/cafca173308534c999cd96cef6214df6f43ad627))
+
+- Scene-support
+  ([`6d87542`](https://github.com/crash0verride11/aiomusiccast/commit/6d875424994e2b0282de5f71ff263ffcf286ec86))
+
+- Ship py.typed marker
+  ([`0f96c25`](https://github.com/crash0verride11/aiomusiccast/commit/0f96c255aaf656f547c646cf6cb616d2f792622d))
+
+- Speaker pattern
+  ([`9f5626b`](https://github.com/crash0verride11/aiomusiccast/commit/9f5626b79e69186c957c101160241bc2689ef298))
+
+### Refactoring
+
+- Publish as aiomusiccast-co with import name aiomusiccast_co
+  ([`a435215`](https://github.com/crash0verride11/aiomusiccast/commit/a435215f05a7dc03951a70391a4a45947a037401))
+
+### Testing
+
+- Add smoke test suite
+  ([`71e3d79`](https://github.com/crash0verride11/aiomusiccast/commit/71e3d79eef77be1ad9d1e1310c5ea3cca95f7deb))
