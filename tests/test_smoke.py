@@ -46,6 +46,7 @@ async def device() -> MusicCastDevice:
     dev = MusicCastDevice("192.0.2.1", MagicMock())
     dev.device.get = AsyncMock()
     dev.device.request = AsyncMock()
+    dev.device.post = AsyncMock()
 
     zone = MusicCastZoneData()
     zone.features = ZoneFeature.SURROUND_AI | ZoneFeature.SCENE | ZoneFeature.ACTUAL_VOLUME
@@ -81,6 +82,12 @@ async def test_scene_activate_recalls_its_own_number(device: MusicCastDevice) ->
     await scenes["1: Movie"].activate()
 
     device.device.get.assert_awaited_once_with(Zone.recall_scene("main", 1))
+
+
+async def test_set_scene_info_posts_name(device: MusicCastDevice) -> None:
+    await device.set_scene_info("main", 2, "Party")
+
+    device.device.post.assert_awaited_once_with(f"{BASE}/main/setSceneInfo", {"num": 2, "text": "Party"})
 
 
 async def test_set_volume_db_converts_to_volume_step(device: MusicCastDevice) -> None:

@@ -1627,20 +1627,20 @@ class Zone:
 
     @classmethod
     def set_scene_info(cls, zone: str, num: int, text: str) -> tuple[str, dict]:
-        """Return the URL and body to update a scene's display name.
+        """Return the URL and body to update a scene's name for a zone.
 
         Parameters
         ----------
         zone : str
             Target zone. Values: 'main', 'zone2', 'zone3', 'zone4'.
         num : int
-            Scene number to update.
+            Scene number to update. Sent as a JSON integer.
         text : str
-            New display name for the scene.
+            Display name for the scene.
         """
         return (
             UrlBuilder.build_zone_url(Zone.URI["SET_SCENE_INFO"], zone),
-            {"num": str(num), "text": text},
+            {"num": num, "text": text},
         )
 
     @classmethod

@@ -763,6 +763,11 @@ class MusicCastDevice:
         """Activate the given scene in the specified zone."""
         await self.device.get(Zone.recall_scene(zone_id, num))
 
+    @_check_feature(ZoneFeature.SCENE)
+    async def set_scene_info(self, zone_id: str, num: int, text: str) -> None:
+        """Set scene information; renaming a scene is validated on a receiver, other fields may vary by firmware."""
+        await self.device.post(*Zone.set_scene_info(zone_id, num, text))
+
     async def set_sleep_timer(self, zone_id, sleep_time=0):
         """Set sleep time."""
         sleep_time = math.ceil(sleep_time / 30) * 30
