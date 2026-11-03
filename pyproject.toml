@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aiomusiccast-co"
-version = "0.16.0"
+version = "0.17.0"
 description = "Asyncio library for Yamaha MusicCast devices; maintained fork of aiomusiccast for the Home Assistant integration."
 readme = "README.md"
 license = { file = "LICENSE.md" }

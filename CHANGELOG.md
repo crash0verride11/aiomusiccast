@@ -6,6 +6,14 @@ python-semantic-release; earlier history is in upstream's releases up to 0.15.0.
 
 <!-- version list -->
 
+## v0.17.0 (2026-11-03)
+
+### Features
+
+- Add set_scene_info to rename zone scenes
+  ([`3db57a3`](https://github.com/crash0verride11/aiomusiccast/commit/3db57a36838cd8f72a446e96bf039b7829e3349a))
+
+
 ## v0.16.0 (2026-11-02)
 
 ### Bug Fixes
