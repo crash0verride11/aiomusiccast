@@ -6,6 +6,14 @@ python-semantic-release; earlier history is in upstream's releases up to 0.15.0.
 
 <!-- version list -->
 
+## v0.17.1 (2026-11-12)
+
+### Bug Fixes
+
+- Keep zone scene names when getSceneInfo returns an error
+  ([`c95db61`](https://github.com/crash0verride11/aiomusiccast/commit/c95db61cc8e1b1649cffe4eae985f0362f746f2c))
+
+
 ## v0.17.0 (2026-11-03)
 
 ### Features
