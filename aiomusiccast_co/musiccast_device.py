@@ -381,9 +381,16 @@ class MusicCastDevice:
 
     async def _fetch_scenes(self, zone_id: str) -> None:
         scene_data = await self.device.request_json(Zone.get_scene_info(zone_id))
-        self.data.zones[zone_id].scene_information = {
-            scene["num"]: scene["text"] for scene in scene_data.get("scene_list", [])
-        }
+        # A receiver that is busy or initializing can answer with a non-zero response_code and no scene_list. Keep the
+        # previous names then: the Scene capabilities are built once, and their names read scene_information live.
+        if scene_data.get("response_code") != 0 or "scene_list" not in scene_data:
+            _LOGGER.debug(
+                "Ignoring getSceneInfo response for zone %s (response_code %s), keeping previous scene names",
+                zone_id,
+                scene_data.get("response_code"),
+            )
+            return
+        self.data.zones[zone_id].scene_information = {scene["num"]: scene["text"] for scene in scene_data["scene_list"]}
 
     async def fetch(self):
         """Fetch data from musiccast device."""

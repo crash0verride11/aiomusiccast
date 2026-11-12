@@ -296,7 +296,7 @@ _zone_capabilities: dict[ZoneFeature, ZoneCapabilityFactory | dict[str, ZoneCapa
         Scene(
             f"{capability_id}_{num}",
             num,
-            lambda n: device.data.zones[zone_id].scene_information[n],
+            lambda n: (device.data.zones[zone_id].scene_information or {}).get(n, f"Scene {n}"),
             EntityType.CONFIG,
             lambda n=num: device.recall_scene(zone_id, n),
         )

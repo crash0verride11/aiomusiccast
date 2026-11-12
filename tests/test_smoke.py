@@ -101,3 +101,40 @@ async def test_unsupported_feature_raises(device: MusicCastDevice) -> None:
 
     with pytest.raises(MusicCastUnsupportedException):
         await device.set_surround_ai("main", True)
+
+
+async def test_failed_scene_fetch_keeps_previous_names(device: MusicCastDevice) -> None:
+    device.device.request_json = AsyncMock(
+        side_effect=[
+            {"response_code": 0, "scene_list": [{"num": 1, "text": "Movie"}, {"num": 2, "text": "Music"}]},
+            {"response_code": 5},
+        ]
+    )
+    await device._fetch_scenes("main")
+    scenes = [cap for cap in build_zone_capabilities(device, "main") if isinstance(cap, Scene)]
+
+    await device._fetch_scenes("main")
+
+    assert device.data.zones["main"].scene_information == {1: "Movie", 2: "Music"}
+    assert sorted(scene.name for scene in scenes) == ["1: Movie", "2: Music"]
+
+
+async def test_scene_fetch_applies_renamed_scenes(device: MusicCastDevice) -> None:
+    scenes = [cap for cap in build_zone_capabilities(device, "main") if isinstance(cap, Scene)]
+    device.device.request_json = AsyncMock(
+        return_value={"response_code": 0, "scene_list": [{"num": 1, "text": "Movie"}, {"num": 2, "text": "Party"}]}
+    )
+
+    await device._fetch_scenes("main")
+
+    assert sorted(scene.name for scene in scenes) == ["1: Movie", "2: Party"]
+
+
+async def test_scene_name_falls_back_for_unknown_number(device: MusicCastDevice) -> None:
+    scenes = [cap for cap in build_zone_capabilities(device, "main") if isinstance(cap, Scene)]
+
+    device.data.zones["main"].scene_information = {}
+    assert sorted(scene.name for scene in scenes) == ["1: Scene 1", "2: Scene 2"]
+
+    device.data.zones["main"].scene_information = None
+    assert sorted(scene.name for scene in scenes) == ["1: Scene 1", "2: Scene 2"]
