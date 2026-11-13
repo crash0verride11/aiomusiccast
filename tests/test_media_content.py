@@ -155,6 +155,15 @@ async def test_browse_last_page(device: MusicCastDevice, yxc: FakeYxc) -> None:
     assert (last.has_previous_page, last.has_next_page) == (True, False)
 
 
+async def test_browse_page_that_ends_exactly_at_the_list_end(device: MusicCastDevice, yxc: FakeYxc) -> None:
+    ListBrowser(yxc, [items(16, PLAY)])
+
+    last = await MusicCastMediaContent.browse_media(device, "main", ["list", "net_radio", "0", "<>8"])
+
+    assert titles(last) == [f"Item {i}" for i in range(8, 16)]
+    assert last.has_next_page is False
+
+
 async def test_browse_longer_pages_read_several_batches(device: MusicCastDevice, yxc: FakeYxc) -> None:
     ListBrowser(yxc, [items(20, PLAY)])
 

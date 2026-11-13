@@ -194,7 +194,7 @@ class MusicCastMediaContent:
         self.can_play = not any(child.can_browse for child in self.children)
         self.can_browse = True
         self.content_type = "directory" if any(child.can_browse for child in self.children) else "track"
-        if (list_info.get("max_line", 8) - self.start_index) >= self.list_len:
+        if (list_info.get("max_line", 8) - self.start_index) > self.list_len:
             self.has_next_page = True
             self.children.append(
                 MusicCastMediaContent(
