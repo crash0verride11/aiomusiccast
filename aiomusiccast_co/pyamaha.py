@@ -323,7 +323,7 @@ class AsyncDevice:
                     res = child
                     break
 
-            if not res:
+            if res is None:
                 raise MusicCastConfigurationException("Did not find the AVTransport service.")
             self.upnp_avt_ns = res.find("serviceType").text
             self.upnp_avt_ctrl = res.find("controlURL").text
