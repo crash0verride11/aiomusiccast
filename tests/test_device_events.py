@@ -86,6 +86,18 @@ async def test_netusb_play_time(device: MusicCastDevice, yxc: FakeYxc) -> None:
     assert yxc.reads == []
 
 
+async def test_undecodable_event_refetches_everything(device: MusicCastDevice, yxc: FakeYxc) -> None:
+    # MusicCastUdpProtocol passes None for a datagram that is not valid UTF-8 JSON.
+    callback = MagicMock()
+    device.register_callback(callback)
+    yxc.update("main/getStatus", volume=100)
+
+    await device.handle(None)
+
+    assert device.data.zones["main"].current_volume == 100
+    callback.assert_called_once_with()
+
+
 async def test_callbacks_run_after_each_event(device: MusicCastDevice) -> None:
     callback = MagicMock()
     removed = MagicMock()
