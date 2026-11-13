@@ -135,7 +135,9 @@ class MusicCastDevice:
     async def handle(self, message):
         """Handle udp events."""
         if message is None:
+            # The UDP message could not be decoded, so refetch everything instead of applying it.
             await self.fetch()
+            message = {}
 
         for parameter in message:
             if parameter in ["main", "zone2", "zone3", "zone4"]:
