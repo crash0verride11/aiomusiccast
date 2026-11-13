@@ -25,4 +25,4 @@ __all__ = [
 ]
 
 # Updated by python-semantic-release on each release.
-__version__ = "0.17.1"
+__version__ = "0.17.2"

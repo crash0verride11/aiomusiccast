@@ -6,6 +6,14 @@ python-semantic-release; earlier history is in upstream's releases up to 0.15.0.
 
 <!-- version list -->
 
+## v0.17.2 (2026-11-13)
+
+### Bug Fixes
+
+- Keep previous device data when a YXC poll returns an error
+  ([`9ef799c`](https://github.com/crash0verride11/aiomusiccast/commit/9ef799c17ee4accb9ec180d6bacbe2a633f755fa))
+
+
 ## v0.17.1 (2026-11-12)
 
 ### Bug Fixes
