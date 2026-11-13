@@ -1,0 +1,16 @@
+{
+  "response_code": 0,
+  "band": "fm",
+  "auto_scan": false,
+  "am": {
+    "preset": 0,
+    "freq": 1080,
+    "tuned": false
+  },
+  "fm": {
+    "preset": 0,
+    "freq": 98100,
+    "tuned": false,
+    "audio_mode": "mono"
+  }
+}

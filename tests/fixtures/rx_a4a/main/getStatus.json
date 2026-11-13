@@ -1,0 +1,38 @@
+{
+  "response_code": 0,
+  "power": "standby",
+  "sleep": 0,
+  "volume": 112,
+  "mute": false,
+  "max_volume": 161,
+  "input": "hdmi1",
+  "input_text": "HDMI1",
+  "distribution_enable": true,
+  "sound_program": "sci-fi",
+  "surr_decoder_type": "auto",
+  "surround_ai": true,
+  "pure_direct": false,
+  "enhancer": false,
+  "tone_control": {
+    "mode": "manual",
+    "bass": 0,
+    "treble": 0
+  },
+  "dialogue_level": 0,
+  "dialogue_lift": 0,
+  "subwoofer_volume": 0,
+  "link_control": "standard",
+  "link_audio_delay": "balanced",
+  "disable_flags": 8,
+  "contents_display": false,
+  "actual_volume": {
+    "mode": "db",
+    "value": -24.5,
+    "unit": "dB"
+  },
+  "party_enable": false,
+  "extra_bass": false,
+  "adaptive_drc": false,
+  "dts_dialogue_control": 2,
+  "adaptive_dsp_level": true
+}

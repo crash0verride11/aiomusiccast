@@ -1,0 +1,10 @@
+{
+  "response_code": 0,
+  "headphone": false,
+  "hdmi_out_1": true,
+  "hdmi_out_2": true,
+  "hdmi_out_3": true,
+  "speaker_pattern": 1,
+  "party_mode": false,
+  "hdmi_standby_through": "auto"
+}
