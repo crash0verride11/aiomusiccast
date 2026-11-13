@@ -1,0 +1,10 @@
+{
+  "response_code": 0,
+  "input": "usb",
+  "menu_layer": 0,
+  "max_line": 0,
+  "index": 0,
+  "playing_index": -1,
+  "menu_name": "USB",
+  "list_info": []
+}

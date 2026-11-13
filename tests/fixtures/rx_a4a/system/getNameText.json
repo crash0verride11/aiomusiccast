@@ -1,0 +1,245 @@
+{
+  "response_code": 0,
+  "zone_list": [
+    {
+      "id": "main",
+      "text": "Main"
+    },
+    {
+      "id": "zone2",
+      "text": "Zone2"
+    }
+  ],
+  "input_list": [
+    {
+      "id": "tuner",
+      "text": "TUNER"
+    },
+    {
+      "id": "phono",
+      "text": "PHONO"
+    },
+    {
+      "id": "hdmi1",
+      "text": "HDMI1"
+    },
+    {
+      "id": "hdmi2",
+      "text": "HDMI2"
+    },
+    {
+      "id": "hdmi3",
+      "text": "HDMI3"
+    },
+    {
+      "id": "hdmi4",
+      "text": "HDMI4"
+    },
+    {
+      "id": "hdmi5",
+      "text": "HDMI5"
+    },
+    {
+      "id": "hdmi6",
+      "text": "HDMI6"
+    },
+    {
+      "id": "hdmi7",
+      "text": "HDMI7"
+    },
+    {
+      "id": "audio1",
+      "text": "AUDIO1"
+    },
+    {
+      "id": "audio2",
+      "text": "AUDIO2"
+    },
+    {
+      "id": "audio3",
+      "text": "AUDIO3"
+    },
+    {
+      "id": "audio4",
+      "text": "AUDIO4"
+    },
+    {
+      "id": "tv",
+      "text": "TV"
+    },
+    {
+      "id": "main_sync",
+      "text": "MAIN SYNC"
+    },
+    {
+      "id": "usb",
+      "text": "USB"
+    },
+    {
+      "id": "bluetooth",
+      "text": "BLUETOOTH"
+    },
+    {
+      "id": "server",
+      "text": "SERVER"
+    },
+    {
+      "id": "net_radio",
+      "text": "NET RADIO"
+    },
+    {
+      "id": "napster",
+      "text": "NAPSTER"
+    },
+    {
+      "id": "pandora",
+      "text": "PANDORA"
+    },
+    {
+      "id": "siriusxm",
+      "text": "SIRIUSXM"
+    },
+    {
+      "id": "spotify",
+      "text": "SPOTIFY"
+    },
+    {
+      "id": "airplay",
+      "text": "AIRPLAY"
+    },
+    {
+      "id": "qobuz",
+      "text": "QOBUZ"
+    },
+    {
+      "id": "mc_link",
+      "text": "MC LINK"
+    },
+    {
+      "id": "tidal",
+      "text": "TIDAL"
+    },
+    {
+      "id": "deezer",
+      "text": "DEEZER"
+    },
+    {
+      "id": "alexa",
+      "text": "ALEXA"
+    },
+    {
+      "id": "amazon_music",
+      "text": "AMAZON MUSIC"
+    }
+  ],
+  "sound_program_list": [
+    {
+      "id": "munich",
+      "text": "Hall in Munich"
+    },
+    {
+      "id": "vienna",
+      "text": "Hall in Vienna"
+    },
+    {
+      "id": "amsterdam",
+      "text": "Hall in Amsterdam"
+    },
+    {
+      "id": "freiburg",
+      "text": "Church in Freiburg"
+    },
+    {
+      "id": "royaumont",
+      "text": "Church in Royaumont"
+    },
+    {
+      "id": "chamber",
+      "text": "Chamber"
+    },
+    {
+      "id": "village_vanguard",
+      "text": "Village Vanguard"
+    },
+    {
+      "id": "warehouse_loft",
+      "text": "Warehouse Loft"
+    },
+    {
+      "id": "cellar_club",
+      "text": "Cellar Club"
+    },
+    {
+      "id": "roxy_theatre",
+      "text": "The Roxy Theatre"
+    },
+    {
+      "id": "bottom_line",
+      "text": "The Bottom Line"
+    },
+    {
+      "id": "sports",
+      "text": "Sports"
+    },
+    {
+      "id": "action_game",
+      "text": "Action Game"
+    },
+    {
+      "id": "roleplaying_game",
+      "text": "Roleplaying Game"
+    },
+    {
+      "id": "music_video",
+      "text": "Music Video"
+    },
+    {
+      "id": "recital_opera",
+      "text": "Recital/Opera"
+    },
+    {
+      "id": "standard",
+      "text": "Standard"
+    },
+    {
+      "id": "spectacle",
+      "text": "Spectacle"
+    },
+    {
+      "id": "sci-fi",
+      "text": "Sci-Fi"
+    },
+    {
+      "id": "adventure",
+      "text": "Adventure"
+    },
+    {
+      "id": "drama",
+      "text": "Drama"
+    },
+    {
+      "id": "mono_movie",
+      "text": "Mono Movie"
+    },
+    {
+      "id": "enhanced",
+      "text": "Enhanced"
+    },
+    {
+      "id": "2ch_stereo",
+      "text": "2ch Stereo"
+    },
+    {
+      "id": "all_ch_stereo",
+      "text": "All Ch Stereo"
+    },
+    {
+      "id": "surr_decoder",
+      "text": "Surround Decoder"
+    },
+    {
+      "id": "straight",
+      "text": "Straight"
+    }
+  ]
+}
