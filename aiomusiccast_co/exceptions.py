@@ -15,7 +15,7 @@ class MusicCastConnectionException(MusicCastException):
 
 
 class MusicCastResponseException(MusicCastConnectionException):
-    """The device answered a required request with a non-zero response_code."""
+    """The device answered a required request with an error: a non-zero response_code, or without the requested data."""
 
 
 class MusicCastConfigurationException(MusicCastGroupException):
