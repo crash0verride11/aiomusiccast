@@ -11,11 +11,15 @@ import pytest
 import aiomusiccast_co
 from aiomusiccast_co.capabilities import BinarySetter, NumberSetter, Scene
 from aiomusiccast_co.capability_registry import build_zone_capabilities
-from aiomusiccast_co.exceptions import MusicCastUnsupportedException
-from aiomusiccast_co.features import ZoneFeature
+from aiomusiccast_co.exceptions import (
+    MusicCastConnectionException,
+    MusicCastResponseException,
+    MusicCastUnsupportedException,
+)
+from aiomusiccast_co.features import DeviceFeature, ZoneFeature
 from aiomusiccast_co.musiccast_data import MusicCastZoneData, RangeStep
 from aiomusiccast_co.musiccast_device import MusicCastDevice
-from aiomusiccast_co.pyamaha import Zone
+from aiomusiccast_co.pyamaha import System, Zone
 
 BASE = "http://{host}/YamahaExtendedControl/v1"
 
@@ -138,3 +142,73 @@ async def test_scene_name_falls_back_for_unknown_number(device: MusicCastDevice)
 
     device.data.zones["main"].scene_information = None
     assert sorted(scene.name for scene in scenes) == ["1: Scene 1", "2: Scene 2"]
+
+
+ERROR_RESPONSE = {"response_code": 5}
+
+
+@pytest.mark.parametrize(
+    ("method", "attr", "value"),
+    [
+        ("_fetch_netusb", "netusb_total_time", 200),
+        ("_fetch_netusb_presets", "netusb_preset_list", {1: ("spotify", "Morning")}),
+        ("_fetch_tuner", "band", "fm"),
+        ("_fetch_distribution_data", "group_id", "abc123"),
+        ("_fetch_clock_data", "alarm_on", True),
+        ("_fetch_func_status", "speaker_pattern", 2),
+    ],
+)
+async def test_failed_poll_keeps_device_data(device: MusicCastDevice, method: str, attr: str, value: object) -> None:
+    device.features |= DeviceFeature.SPEAKER_PATTERN
+    setattr(device.data, attr, value)
+    group_update = AsyncMock()
+    device.register_group_update_callback(group_update)
+    device.device.request_json = AsyncMock(return_value=ERROR_RESPONSE)
+
+    await getattr(device, method)()
+
+    assert getattr(device.data, attr) == value
+    group_update.assert_not_awaited()
+
+
+async def test_failed_zone_poll_keeps_zone_data(device: MusicCastDevice) -> None:
+    zone = device.data.zones["main"]
+    zone.power = "on"
+    zone.input = "hdmi1"
+    device.device.request_json = AsyncMock(return_value=ERROR_RESPONSE)
+
+    await device._fetch_zone("main")
+
+    assert (zone.power, zone.input, zone.surround_ai) == ("on", "hdmi1", True)
+
+
+async def test_failed_setup_read_raises_and_is_retried(device: MusicCastDevice) -> None:
+    device.device.request_json = AsyncMock(side_effect=[{"response_code": 0, "network_name": "Living"}, ERROR_RESPONSE])
+
+    # A subclass of MusicCastConnectionException, so consumers' existing handling turns it into a failed update.
+    with pytest.raises(MusicCastConnectionException):
+        await device.fetch()
+
+    device.device.request_json = AsyncMock(return_value=ERROR_RESPONSE)
+    with pytest.raises(MusicCastResponseException):
+        await device.fetch()
+
+    # The successful network status read stays cached; the failed device info read is asked again.
+    assert device.data.network_name == "Living"
+    device.device.request_json.assert_awaited_once_with(System.get_device_info())
+
+
+async def test_failed_name_text_keeps_previous_names(device: MusicCastDevice) -> None:
+    device._network_status = {"response_code": 0}
+    device._device_info = {"response_code": 0}
+    device._features = {"system": {}}
+    device._name_text = {"response_code": 0, "input_list": [{"id": "hdmi1", "text": "TV"}]}
+
+    async def respond(url: str) -> dict[str, object]:
+        return ERROR_RESPONSE if url == System.get_name_text(None) else {"response_code": 0}
+
+    device.device.request_json = AsyncMock(side_effect=respond)
+
+    await device.fetch()
+
+    assert device.data.input_names == {"hdmi1": "TV"}

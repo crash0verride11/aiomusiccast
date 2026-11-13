@@ -29,6 +29,7 @@ from .const import (
 from .exceptions import (
     MusicCastException,
     MusicCastGroupException,
+    MusicCastResponseException,
     MusicCastUnsupportedException,
 )
 from .features import Feature
@@ -225,10 +226,32 @@ class MusicCastDevice:
 
     # -----Data Fetching-----
 
+    async def _request_data(self, url: str) -> dict[str, Any] | None:
+        """Request a poll-time read, returning None if the device answered with an error.
+
+        A receiver that is busy or initializing can answer with a non-zero response_code and none of the usual fields.
+        Callers then keep the data from the previous poll instead of overwriting it with defaults.
+        """
+        data: dict[str, Any] = await self.device.request_json(url)
+        if data.get("response_code") != 0:
+            _LOGGER.debug("Ignoring %s (response_code %s), keeping previous data", url, data.get("response_code"))
+            return None
+        return data
+
+    async def _require_data(self, url: str) -> dict[str, Any]:
+        """Request a read that has no previous data to fall back on, raising if the device answered with an error."""
+        data: dict[str, Any] = await self.device.request_json(url)
+        if data.get("response_code") != 0:
+            raise MusicCastResponseException(f"{url} returned response_code {data.get('response_code')}")
+        return data
+
     async def _fetch_netusb(self):
         """Fetch NetUSB data."""
         _LOGGER.debug("Fetching netusb...")
-        self._netusb_play_info = await self.device.request_json(NetUSB.get_play_info())
+        play_info = await self._request_data(NetUSB.get_play_info())
+        if play_info is None:
+            return
+        self._netusb_play_info = play_info
 
         self.data.netusb_input = self._netusb_play_info.get("input", self.data.netusb_input)
         self.data.netusb_playback = self._netusb_play_info.get("playback", self.data.netusb_playback)
@@ -246,7 +269,10 @@ class MusicCastDevice:
     async def _fetch_tuner(self):
         """Fetch tuner data."""
         _LOGGER.debug("Fetching tuner...")
-        self._tuner_play_info = await self.device.request_json(Tuner.get_play_info())
+        play_info = await self._request_data(Tuner.get_play_info())
+        if play_info is None:
+            return
+        self._tuner_play_info = play_info
 
         self.data.band = self._tuner_play_info.get("band", self.data.band)
 
@@ -261,7 +287,9 @@ class MusicCastDevice:
 
     async def _fetch_zone(self, zone_id):
         _LOGGER.debug("Fetching zone %s...", zone_id)
-        zone = await self.device.request_json(Zone.get_status(zone_id))
+        zone = await self._request_data(Zone.get_status(zone_id))
+        if zone is None:
+            return
         zone_data: MusicCastZoneData = self.data.zones.get(zone_id, MusicCastZoneData())
 
         self.data.party_enable = zone.get("party_enable")
@@ -310,7 +338,10 @@ class MusicCastDevice:
 
     async def _fetch_distribution_data(self):
         _LOGGER.debug("Fetching Distribution data...")
-        self._distribution_info = await self.device.request_json(Dist.get_distribution_info())
+        distribution_info = await self._request_data(Dist.get_distribution_info())
+        if distribution_info is None:
+            return
+        self._distribution_info = distribution_info
         self.data.last_group_role = self.data.group_role
         self.data.last_group_id = self.data.group_id
         self.data.group_id = self._distribution_info.get("group_id", None)
@@ -326,7 +357,10 @@ class MusicCastDevice:
 
     async def _fetch_clock_data(self):
         _LOGGER.debug("Fetching Clock data...")
-        self._clock_info = await self.device.request_json(Clock.get_clock_settings())
+        clock_info = await self._request_data(Clock.get_clock_settings())
+        if clock_info is None:
+            return
+        self._clock_info = clock_info
 
         self.data.alarm_on = self._clock_info.get("alarm", {}).get("alarm_on", False)
         self.data.alarm_volume = self._clock_info.get("alarm", {}).get("volume", None)
@@ -364,7 +398,10 @@ class MusicCastDevice:
     async def _fetch_func_status(self):
         _LOGGER.debug("Fetching func status...")
 
-        self._func_status = await self.device.request_json(System.get_func_status())
+        func_status = await self._request_data(System.get_func_status())
+        if func_status is None:
+            return
+        self._func_status = func_status
 
         if DeviceFeature.SPEAKER_A in self.features:
             self.data.speaker_a = self._func_status.get("speaker_a")
@@ -380,28 +417,25 @@ class MusicCastDevice:
             self.data.dimmer.dimmer_current = self._func_status.get("dimmer")
 
     async def _fetch_scenes(self, zone_id: str) -> None:
-        scene_data = await self.device.request_json(Zone.get_scene_info(zone_id))
-        # A receiver that is busy or initializing can answer with a non-zero response_code and no scene_list. Keep the
-        # previous names then: the Scene capabilities are built once, and their names read scene_information live.
-        if scene_data.get("response_code") != 0 or "scene_list" not in scene_data:
-            _LOGGER.debug(
-                "Ignoring getSceneInfo response for zone %s (response_code %s), keeping previous scene names",
-                zone_id,
-                scene_data.get("response_code"),
-            )
+        # Keeping the previous names matters here: the Scene capabilities are built once, and their names read
+        # scene_information live.
+        scene_data = await self._request_data(Zone.get_scene_info(zone_id))
+        if scene_data is None or "scene_list" not in scene_data:
             return
         self.data.zones[zone_id].scene_information = {scene["num"]: scene["text"] for scene in scene_data["scene_list"]}
 
     async def fetch(self):
         """Fetch data from musiccast device."""
+        # The setup reads below are cached once they succeed, so an error must raise (and be retried on the next
+        # fetch) rather than be cached.
         if not self._network_status:
-            self._network_status = await self.device.request_json(System.get_network_status())
+            self._network_status = await self._require_data(System.get_network_status())
 
             self.data.network_name = self._network_status.get("network_name")
             self.data.mac_addresses = self._network_status.get("mac_address")
 
         if not self._device_info:
-            self._device_info = await self.device.request_json(System.get_device_info())
+            self._device_info = await self._require_data(System.get_device_info())
 
             self.data.device_id = self._device_info.get("device_id")
             self.data.model_name = self._device_info.get("model_name")
@@ -409,11 +443,15 @@ class MusicCastDevice:
             self.data.api_version = self._device_info.get("api_version")
             self.data.category = Category(self._device_info.get("category_code", 0))
 
-        self._name_text = await self.device.request_json(System.get_name_text(None))
+        # Zone names are only read in the run-once features block below, so the first name text read is required.
+        if self._name_text is None:
+            self._name_text = await self._require_data(System.get_name_text(None))
+        elif (name_text := await self._request_data(System.get_name_text(None))) is not None:
+            self._name_text = name_text
         zone_names = {zone.get("id"): zone.get("text") for zone in self._name_text.get("zone_list", [])}
 
         if not self._features:
-            self._features = await self.device.request_json(System.get_features())
+            self._features = await self._require_data(System.get_features())
 
             # feature flags from func list
             for feature in self._features.get("system", {}).get("func_list", []):
@@ -1188,7 +1226,9 @@ class MusicCastDevice:
         ]
 
     async def _fetch_netusb_presets(self):
-        result = await self.device.request_json(NetUSB.get_preset_info())
+        result = await self._request_data(NetUSB.get_preset_info())
+        if result is None:
+            return
         self.data.netusb_preset_list = {
             index + 1: (entry.get("input"), entry.get("text"))
             for index, entry in enumerate(result.get("preset_info", []))

@@ -14,6 +14,10 @@ class MusicCastConnectionException(MusicCastException):
     pass
 
 
+class MusicCastResponseException(MusicCastConnectionException):
+    """The device answered a required request with a non-zero response_code."""
+
+
 class MusicCastConfigurationException(MusicCastGroupException):
     pass
 

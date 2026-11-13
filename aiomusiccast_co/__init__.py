@@ -1,4 +1,9 @@
-from .exceptions import MusicCastConnectionException, MusicCastException, MusicCastGroupException
+from .exceptions import (
+    MusicCastConnectionException,
+    MusicCastException,
+    MusicCastGroupException,
+    MusicCastResponseException,
+)
 from .features import DeviceFeature, ZoneFeature
 from .musiccast_data import MusicCastData, MusicCastZoneData
 from .musiccast_device import (
@@ -14,6 +19,7 @@ __all__ = [
     "MusicCastException",
     "MusicCastGroupException",
     "MusicCastMediaContent",
+    "MusicCastResponseException",
     "MusicCastZoneData",
     "ZoneFeature",
 ]
