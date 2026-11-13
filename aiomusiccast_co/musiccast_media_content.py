@@ -3,11 +3,15 @@ from __future__ import annotations
 import logging
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import ClassVar
+from typing import Any, ClassVar
 
+from .exceptions import MusicCastException, MusicCastResponseException
 from .musiccast_device import MusicCastDevice
 
 Logger = logging.getLogger(__name__)
+
+# Upper bound for return commands when going back up a list; YXC menus are far shallower than this.
+MAX_LIST_RETURNS = 20
 
 
 @dataclass(slots=True)
@@ -115,8 +119,8 @@ class MusicCastMediaContent:
             source = media_content_path[1]
             self.menu_layer = int(media_content_path[2])
 
-            list_info = await device.get_list_info(source, 0)
-            if self.menu_layer < list_info.get("menu_layer"):
+            list_info = await self._list_info(source, 0)
+            if self.menu_layer < list_info["menu_layer"]:
                 await self.return_in_list_info(source, self.menu_layer)
 
             elif media_content_path[3].isdigit():
@@ -173,17 +177,16 @@ class MusicCastMediaContent:
 
     async def load_list(self, source: str) -> None:
         # load list info
-        device = self._device
-        list_info = await device.get_list_info(source, self.start_index)
+        list_info = await self._list_info(source, self.start_index)
         self.title = list_info.get("menu_name")
-        self.menu_layer = int(list_info.get("menu_layer"))
+        self.menu_layer = int(list_info["menu_layer"])
         self.content_id = f"list:{source}:{self.menu_layer}:<>{self.start_index}"
         # get list items
         entries = list_info.get("list_info", [])
         for i in range(self.start_index + 8, self.start_index + self.list_len, 8):
             if i >= list_info.get("max_line", 8):
                 break
-            list_info_tmp = await device.get_list_info(source, i)
+            list_info_tmp = await self._list_info(source, i)
             entries += list_info_tmp.get("list_info", [])
 
         if int(self.start_index) != 0:
@@ -207,11 +210,23 @@ class MusicCastMediaContent:
             )
 
     async def return_in_list_info(self, source: str, until_layer: int = 0) -> None:
-        # reset list info
-        while True:
-            list_info = await self._device.get_list_info(source, 0)
-
-            self.menu_layer = list_info.get("menu_layer")
-            if self.menu_layer == until_layer:
-                break
+        """Send return commands until the device's list is at ``until_layer`` or above it."""
+        self.menu_layer = (await self._list_info(source, 0))["menu_layer"]
+        returns = 0
+        while self.menu_layer > until_layer:
+            if returns == MAX_LIST_RETURNS:
+                raise MusicCastException(
+                    f"The {source} list is still at menu layer {self.menu_layer} after {returns} return commands."
+                )
             await self._device.return_in_list(self._zone_id)
+            returns += 1
+            self.menu_layer = (await self._list_info(source, 0))["menu_layer"]
+
+    async def _list_info(self, source: str, index: int) -> dict[str, Any]:
+        """Return the device's list info, raising if it could not be read."""
+        list_info: dict[str, Any] = await self._device.get_list_info(source, index)
+        if list_info.get("menu_layer") is None:
+            raise MusicCastResponseException(
+                f"Could not read the {source} list (response_code {list_info.get('response_code')})."
+            )
+        return list_info

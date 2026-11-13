@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import copy
 import json
 from collections.abc import Awaitable, Callable
@@ -77,6 +78,8 @@ class FakeYxc:
         return sum(1 for url in self.reads if _split(url)[0] == path)
 
     async def request_json(self, url: str) -> dict[str, Any]:
+        # Yield like real I/O, so a runaway request loop can be cancelled by a timeout in the test.
+        await asyncio.sleep(0)
         self.reads.append(url)
         path, query = _split(url)
         if path == "netusb/getListInfo" and f"{path}_{query.get('input')}" in self.responses:
@@ -99,6 +102,7 @@ class FakeYxc:
         return await self._write((url, data))
 
     async def _write(self, write: Write) -> MagicMock:
+        await asyncio.sleep(0)
         self.writes.append(write)
         if self.on_write is not None:
             await self.on_write(write)

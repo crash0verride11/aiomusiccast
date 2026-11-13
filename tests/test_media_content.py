@@ -1,12 +1,14 @@
 """Tests for browsing media with MusicCastMediaContent."""
 
+import asyncio
 import logging
 from typing import Any
 
 import pytest
 
+from aiomusiccast_co.exceptions import MusicCastException, MusicCastResponseException
 from aiomusiccast_co.musiccast_device import MusicCastDevice
-from aiomusiccast_co.musiccast_media_content import MusicCastMediaContent
+from aiomusiccast_co.musiccast_media_content import MAX_LIST_RETURNS, MusicCastMediaContent
 from aiomusiccast_co.pyamaha import NetUSB
 
 from .common import FakeYxc, Write
@@ -174,6 +176,41 @@ async def test_browse_longer_pages_read_several_batches(device: MusicCastDevice,
     assert [read for read in yxc.reads if "index=8" in read]
 
 
+@pytest.mark.parametrize(
+    "path", [["input", "net_radio"], ["list", "net_radio", "1", "2"], ["list", "net_radio", "0", "<>8"]]
+)
+async def test_browse_unreadable_list_raises(device: MusicCastDevice, yxc: FakeYxc, path: list[str]) -> None:
+    ListBrowser(yxc, [items(3, BROWSE)])
+    yxc.fail("netusb/getListInfo")
+
+    # Before, an error response made return_in_list_info send return commands forever.
+    async with asyncio.timeout(1):
+        with pytest.raises(MusicCastResponseException, match="Could not read the net_radio list"):
+            await MusicCastMediaContent.browse_media(device, "main", path)
+    assert yxc.writes == []
+
+
+async def test_return_in_list_gives_up_when_the_device_ignores_returns(device: MusicCastDevice, yxc: FakeYxc) -> None:
+    ListBrowser(yxc, [items(3, BROWSE), items(2, BROWSE), items(5, PLAY)], layer=2)
+    yxc.on_write = None  # the device stays on layer 2
+
+    async with asyncio.timeout(1):
+        with pytest.raises(MusicCastException, match="still at menu layer 2"):
+            await MusicCastMediaContent.browse_media(device, "main", ["input", "net_radio"])
+    assert yxc.writes == [NetUSB.set_list_control("main", "return", "", "main")] * MAX_LIST_RETURNS
+
+
+async def test_return_in_list_stops_above_a_deeper_target(device: MusicCastDevice, yxc: FakeYxc) -> None:
+    ListBrowser(yxc, [items(3, BROWSE), items(2, BROWSE)], layer=1)
+    content = MusicCastMediaContent(musiccast=device, zone_id="main")
+
+    async with asyncio.timeout(1):
+        await content.return_in_list_info("net_radio", until_layer=3)
+
+    assert content.menu_layer == 1
+    assert yxc.writes == []
+
+
 async def test_browse_unknown_method_raises(device: MusicCastDevice) -> None:
     with pytest.raises(ValueError, match="unknown browse method"):
         await MusicCastMediaContent.browse_media(device, "main", ["albums"])
@@ -209,11 +246,12 @@ def test_device_needs_a_zone(device: MusicCastDevice) -> None:
         MusicCastMediaContent(musiccast=device)
 
 
-async def test_operations_need_device_and_zone(device: MusicCastDevice) -> None:
+async def test_operations_need_device_and_zone(device: MusicCastDevice, yxc: FakeYxc) -> None:
     with pytest.raises(ValueError, match="MusicCast device must be provided"):
         await MusicCastMediaContent(zone_id="main").load_list("net_radio")
+    ListBrowser(yxc, [items(3, BROWSE), items(2, BROWSE)], layer=1)
     content = MusicCastMediaContent(musiccast=device, zone_id="main")
     content.zone_id = None
     with pytest.raises(ValueError, match="Zone id is required"):
-        # The captured list is on layer 0, so reaching layer 5 needs a return command for the zone.
-        await content.return_in_list_info("net_radio", until_layer=5)
+        # Going back from layer 1 to 0 needs a return command for the zone.
+        await content.return_in_list_info("net_radio")
