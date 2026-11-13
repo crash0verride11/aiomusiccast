@@ -6,6 +6,41 @@ python-semantic-release; earlier history is in upstream's releases up to 0.15.0.
 
 <!-- version list -->
 
+## v0.17.3 (2026-11-13)
+
+### Bug Fixes
+
+- Don't offer a next page when the list ends on a page boundary
+  ([`b0a4340`](https://github.com/crash0verride11/aiomusiccast/commit/b0a43408da26fb91def43e1bb9a5ee987eb29de2))
+
+- Refetch device state on an undecodable UDP message
+  ([`299fb7b`](https://github.com/crash0verride11/aiomusiccast/commit/299fb7b3f13cbac6a8426de473dcfee8d06d9070))
+
+- Stop media browsing from looping forever on the list layer
+  ([`bc41842`](https://github.com/crash0verride11/aiomusiccast/commit/bc41842b26e2f9eb712415525ce34509f492e7c8))
+
+### Documentation
+
+- Describe the capability id pattern the registry produces
+  ([`a3e79e9`](https://github.com/crash0verride11/aiomusiccast/commit/a3e79e9ba3b29f866bb0433e72cb53780a28b2eb))
+
+### Refactoring
+
+- Check for a missing AVTransport service with is None
+  ([`1f465a6`](https://github.com/crash0verride11/aiomusiccast/commit/1f465a6d95b2cb064b638870c5a3b16003e58c99))
+
+### Testing
+
+- Capture RX-A4A responses as test fixtures
+  ([`e0eeeb8`](https://github.com/crash0verride11/aiomusiccast/commit/e0eeeb8f2b875fb7ac042e09c34868315b04a339))
+
+- Fail on warnings and on coverage below 88%
+  ([`a34e3c6`](https://github.com/crash0verride11/aiomusiccast/commit/a34e3c6086e470c69760b52e8484042d7ab3cbdb))
+
+- Replace the smoke tests with a per-module suite
+  ([`1f8e42a`](https://github.com/crash0verride11/aiomusiccast/commit/1f8e42a1f84bc29aaf1c9a6efc22b4ec2f14d74f))
+
+
 ## v0.17.2 (2026-11-13)
 
 ### Bug Fixes
