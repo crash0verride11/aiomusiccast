@@ -78,6 +78,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.ref_name }}
+          # Full history, so the reset below still finds the workflow sha when newer
+          # pushes have moved the branch past it.
+          fetch-depth: 0
 
       # Release exactly the commit that passed the checks, even if the branch moved since.
       - name: Force release branch to the workflow sha
