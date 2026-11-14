@@ -68,6 +68,10 @@ def test_get_urls(url: str, expected: str) -> None:
         ),
         (Dist.set_group_name("Party"), (f"{BASE}/dist/setGroupName", {"name": "Party"})),
         (
+            NetUSB.set_search_string("Miles", "main", 2),
+            (f"{BASE}/netusb/setSearchString", {"string": "Miles", "list_id": "main", "index": 2}),
+        ),
+        (
             Clock.set_alarm_settings(mode="oneday", day="oneday", repeat=True, enable=True),
             (
                 f"{BASE}/clock/setAlarmSettings",

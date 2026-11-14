@@ -97,7 +97,7 @@ async def test_browse_input_returns_to_the_top_of_the_list(device: MusicCastDevi
 
     assert browser.layer == 0
     assert yxc.writes == [NetUSB.set_list_control("main", "return", "", "main")] * 2
-    assert (content.title, content.menu_layer, content.content_id) == ("Layer 0", 0, "list:net_radio:0:<>0")
+    assert (content.title, content.menu_layer, content.content_id) == ("Layer 0", 0, "list:net_radio:0:<>0:")
     assert titles(content) == ["Item 0", "Item 1", "Item 2"]
     assert (content.content_type, content.can_play, content.has_next_page) == ("directory", False, False)
 
@@ -142,7 +142,7 @@ async def test_browse_pages(device: MusicCastDevice, yxc: FakeYxc) -> None:
     second = await MusicCastMediaContent.browse_media(device, "main", ["list", "net_radio", "0", "<>8"])
 
     assert titles(first)[-1] == "Next Page"
-    assert first.children[-1].content_id == "list:net_radio:0:<>8"
+    assert first.children[-1].content_id == "list:net_radio:0:<>8:"
     assert (first.has_previous_page, first.has_next_page) == (False, True)
     assert titles(second)[:-1] == [f"Item {i}" for i in range(8, 16)]
     assert second.children[-1].content_id == "list:net_radio:0:<>16"
@@ -170,7 +170,7 @@ async def test_browse_page_that_ends_exactly_at_the_list_end(device: MusicCastDe
 async def test_browse_longer_pages_read_several_batches(device: MusicCastDevice, yxc: FakeYxc) -> None:
     ListBrowser(yxc, [items(20, PLAY)])
 
-    content = await MusicCastMediaContent.browse_media(device, "main", ["input", "net_radio"], list_len=16)
+    content = await MusicCastMediaContent.browse_media(device, "main", ["list", "net_radio", "0", "<>0"], list_len=16)
 
     assert titles(content)[:-1] == [f"Item {i}" for i in range(16)]
     assert content.children[-1].content_id == "list:net_radio:0:<>16"
@@ -197,7 +197,8 @@ async def test_return_in_list_gives_up_when_the_device_ignores_returns(device: M
 
     async with asyncio.timeout(1):
         with pytest.raises(MusicCastException, match="still at menu layer 2"):
-            await MusicCastMediaContent.browse_media(device, "main", ["input", "net_radio"])
+            # A content id without a path goes back up by layer number.
+            await MusicCastMediaContent.browse_media(device, "main", ["list", "net_radio", "0", "<>0"])
     assert yxc.writes == [NetUSB.set_list_control("main", "return", "", "main")] * MAX_LIST_RETURNS
 
 
