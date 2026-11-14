@@ -8,7 +8,7 @@ import pytest
 
 from aiomusiccast_co.exceptions import MusicCastException, MusicCastResponseException
 from aiomusiccast_co.musiccast_device import MusicCastDevice
-from aiomusiccast_co.musiccast_media_content import MAX_LIST_RETURNS, MusicCastMediaContent
+from aiomusiccast_co.musiccast_media_content import MAX_LIST_RETURNS, MusicCastMediaContent, secure_thumbnail
 from aiomusiccast_co.pyamaha import NetUSB
 
 from .common import FakeYxc, Write
@@ -72,6 +72,7 @@ def test_categories(device: MusicCastDevice) -> None:
         "input:qobuz",
         "input:server",
         "input:siriusxm",
+        "input:tidal",
         "input:usb",
     ]
     assert library.children[4].title == "NET RADIO"
@@ -255,3 +256,46 @@ async def test_operations_need_device_and_zone(device: MusicCastDevice, yxc: Fak
     with pytest.raises(ValueError, match="Zone id is required"):
         # Going back from layer 1 to 0 needs a return command for the zone.
         await content.return_in_list_info("net_radio")
+
+
+# -- TIDAL ------------------------------------------------------------------------------------------------------------
+
+TIDAL_HTTP = "http://resources.tidal.com:80/images/f1055fea/4564/4a53/8301/c9198500f439/750x750.jpg"
+TIDAL_HTTPS = "https://resources.tidal.com/images/f1055fea/4564/4a53/8301/c9198500f439/750x750.jpg"
+
+
+@pytest.mark.parametrize(
+    ("url", "expected"),
+    [
+        (TIDAL_HTTP, TIDAL_HTTPS),
+        ("http://resources.tidal.com/a.jpg?w=1", "https://resources.tidal.com/a.jpg?w=1"),
+        (TIDAL_HTTPS, TIDAL_HTTPS),
+        (None, None),
+        ("", ""),
+        # Left unchanged: other hosts (the device's own artwork), other ports, credentials, look-alike paths.
+        ("http://192.0.2.10/AlbumART/AlbumART.jpg", "http://192.0.2.10/AlbumART/AlbumART.jpg"),
+        ("http://resources.tidal.com:8080/a.jpg", "http://resources.tidal.com:8080/a.jpg"),
+        ("http://user@resources.tidal.com/a.jpg", "http://user@resources.tidal.com/a.jpg"),
+        ("http://evil.example/resources.tidal.com/a.jpg", "http://evil.example/resources.tidal.com/a.jpg"),
+    ],
+)
+def test_secure_thumbnail(url: str | None, expected: str | None) -> None:
+    assert secure_thumbnail(url) == expected
+
+
+def test_list_entries_get_the_https_artwork() -> None:
+    info = {"text": "You Still Got Me", "thumbnail": TIDAL_HTTP, "attribute": BROWSE | PLAY}
+
+    assert MusicCastMediaContent.from_info("tidal", info, 4, 4).thumbnail == TIDAL_HTTPS
+
+
+def test_tidal_is_offered_when_the_zone_has_it(device: MusicCastDevice) -> None:
+    device.data.zones["main"].input_list = ["tidal", "deezer", "airplay"]
+    device.data.input_names["tidal"] = "TIDAL"
+
+    library = MusicCastMediaContent.categories(device, "main")
+
+    assert [(child.content_id, child.title) for child in library.children[1:]] == [
+        ("input:deezer", device.data.input_names.get("deezer", "deezer")),
+        ("input:tidal", "TIDAL"),
+    ]
