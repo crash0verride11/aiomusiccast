@@ -4,6 +4,7 @@ import logging
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any, ClassVar
+from urllib.parse import urlsplit, urlunsplit
 
 from .exceptions import MusicCastException, MusicCastResponseException
 from .musiccast_device import MusicCastDevice
@@ -12,6 +13,20 @@ Logger = logging.getLogger(__name__)
 
 # Upper bound for return commands when going back up a list; YXC menus are far shallower than this.
 MAX_LIST_RETURNS = 20
+
+# Hosts that serve the artwork devices report over http:// over HTTPS as well. Browsers block http:// images as mixed
+# content when the frontend is served over HTTPS; devices report e.g. http://resources.tidal.com:80/images/...
+HTTPS_THUMBNAIL_HOSTS = ("resources.tidal.com",)
+
+
+def secure_thumbnail(url: str | None) -> str | None:
+    """Return the HTTPS URL of artwork from :data:`HTTPS_THUMBNAIL_HOSTS`, and any other URL unchanged."""
+    if not url or not url.startswith("http://"):
+        return url
+    parts = urlsplit(url)
+    if parts.hostname not in HTTPS_THUMBNAIL_HOSTS or parts.port not in (None, 80) or parts.username is not None:
+        return url
+    return urlunsplit(("https", parts.hostname, parts.path, parts.query, parts.fragment))
 
 
 @dataclass(slots=True)
@@ -29,6 +44,7 @@ class MusicCastMediaContent:
         "juke",
         "radiko",
         "qobuz",
+        "tidal",
         "deezer",
         "amazon_music",
     )
@@ -81,7 +97,7 @@ class MusicCastMediaContent:
             can_search=attribute & 0b1000 == 0b1000,
             title=info.get("text"),
             content_id=f"list:{source}:{menu_layer}:{index}",
-            thumbnail=info.get("thumbnail"),
+            thumbnail=secure_thumbnail(info.get("thumbnail")),
             menu_layer=menu_layer,
             content_type="directory" if attribute & 0b10 == 0b10 else "track",
         )
