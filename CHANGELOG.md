@@ -6,6 +6,27 @@ python-semantic-release; earlier history is in upstream's releases up to 0.15.0.
 
 <!-- version list -->
 
+## v0.18.0 (2026-11-14)
+
+### Bug Fixes
+
+- Browse and play netusb lists by their full path
+  ([`200f0a9`](https://github.com/crash0verride11/aiomusiccast/commit/200f0a977c5cd140341a0583ea7ced3392b31de1))
+
+### Documentation
+
+- Ai transparency
+  ([`43d14bf`](https://github.com/crash0verride11/aiomusiccast/commit/43d14bffffe5b7521ac946bd5d2c550b87122c5c))
+
+### Features
+
+- Browse the TIDAL input
+  ([`35c8bc5`](https://github.com/crash0verride11/aiomusiccast/commit/35c8bc5a50380541eaf839d3ad870399b7a12f93))
+
+- Search netusb lists
+  ([`b364ee4`](https://github.com/crash0verride11/aiomusiccast/commit/b364ee4beaf58890ce05d9296292e99a14a1fb77))
+
+
 ## v0.17.3 (2026-11-13)
 
 ### Bug Fixes
