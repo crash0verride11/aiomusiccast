@@ -198,6 +198,11 @@ async def play(device: MusicCastDevice, content_id: str | None) -> None:
     await MusicCastMediaContent.play_list_entry(device, "main", content_id)
 
 
+async def search(device: MusicCastDevice, content_id: str | None, text: str) -> MusicCastMediaContent:
+    assert content_id is not None
+    return await MusicCastMediaContent.search(device, "main", content_id, text)
+
+
 def child_id(content: MusicCastMediaContent, index: int) -> str:
     content_id = content.children[index].content_id
     assert content_id is not None
@@ -511,3 +516,83 @@ async def test_only_list_entries_play(device: MusicCastDevice, menu: Menu, conte
     with pytest.raises(ValueError):  # noqa: PT011 - the message differs per case
         await play(device, content_id)
     assert menu.played == []
+
+
+# -- searching --------------------------------------------------------------------------------------------------------
+
+
+@pytest.mark.usefixtures("menu")
+async def test_search_from_the_input(device: MusicCastDevice, yxc: FakeYxc) -> None:
+    results = await search(device, "input:tidal", "Coltrane")
+
+    assert yxc.writes[-1] == NetUSB.set_search_string("Coltrane", "main", SEARCH_ENTRY)
+    assert (results.title, titles(results)) == ("Search", ["Albums", "Coltrane album 1", "Coltrane album 2"])
+    assert results.content_id == "list:tidal:1:<>0:s2:Coltrane"
+    assert parse_path_content_id(child_id(results, 1)) == ("tidal", ("s2", 1), None, "Coltrane")
+
+
+@pytest.mark.usefixtures("menu")
+async def test_search_with_a_searchable_entry(device: MusicCastDevice) -> None:
+    root = await browse(device, "input:tidal")
+
+    results = await search(device, child_id(root, SEARCH_ENTRY), "Miles")
+
+    assert titles(results)[1:] == ["Miles album 1", "Miles album 2"]
+
+
+async def test_search_from_a_searchable_entry_folder(device: MusicCastDevice, yxc: FakeYxc, menu: Menu) -> None:
+    root = await browse(device, "input:tidal")
+    folder = await browse(device, child_id(root, SEARCH_ENTRY))
+    yxc.writes.clear()
+
+    results = await search(device, folder.content_id, "Miles")
+
+    assert yxc.writes == [NetUSB.set_search_string("Miles", "main", SEARCH_ENTRY)]
+    assert titles(results)[1:] == ["Miles album 1", "Miles album 2"]
+    assert menu.searches == ["Miles"]
+
+
+async def test_search_results_stay_valid_after_another_search(device: MusicCastDevice, menu: Menu) -> None:
+    results = await search(device, "input:tidal", "Coltrane")
+    await search(device, "input:tidal", "Miles")
+
+    await play(device, child_id(results, 2))
+    album = await browse(device, child_id(results, 1))
+
+    assert menu.played == ["Coltrane album 2"]
+    assert album.title == "Coltrane album 1"
+    # Playing searched again for Coltrane; browsing found the cursor already in those results.
+    assert menu.searches == ["Coltrane", "Miles", "Coltrane"]
+
+
+async def test_same_search_is_not_repeated(device: MusicCastDevice, menu: Menu) -> None:
+    results = await search(device, "input:tidal", "Coltrane")
+
+    await browse(device, child_id(results, 1))
+    await browse(device, child_id(results, 2))
+
+    assert menu.searches == ["Coltrane"]
+
+
+@pytest.mark.parametrize(
+    ("content_id", "message"),
+    [
+        (entry_content_id("tidal", MY_MUSIC), "not capable of search"),
+        (entry_content_id("tidal", (7,)), "not capable of search"),
+        (page_content_id("tidal", MY_MUSIC), "Not a list entry"),
+        (entry_content_id("tidal", ("s2", 1), "x"), "within search results"),
+    ],
+)
+async def test_search_needs_a_searchable_entry(
+    device: MusicCastDevice, menu: Menu, content_id: str, message: str
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        await search(device, content_id, "Miles")
+    assert menu.searches == []
+
+
+async def test_search_needs_an_input_with_a_search_entry(device: MusicCastDevice, menu: Menu) -> None:
+    menu.root.items.pop()
+
+    with pytest.raises(ValueError, match="no search-capable entry"):
+        await search(device, "input:tidal", "Miles")

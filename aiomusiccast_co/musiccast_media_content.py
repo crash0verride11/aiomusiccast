@@ -7,7 +7,7 @@ from typing import Any, ClassVar
 from urllib.parse import quote, unquote, urlsplit, urlunsplit
 
 from .exceptions import MusicCastException, MusicCastResponseException
-from .list_navigation import ListNavigator, Step, decode_steps, encode_steps, is_search_step, step_index
+from .list_navigation import ListNavigator, Step, decode_steps, encode_steps, is_search_step, search_step, step_index
 from .musiccast_device import MusicCastDevice
 
 Logger = logging.getLogger(__name__)
@@ -345,6 +345,73 @@ class MusicCastMediaContent:
         async with navigator.lock:
             await navigator.goto(steps[:-1], query)
             await musiccast.play_list_media(last, zone_id)
+
+    @classmethod
+    async def search(
+        cls,
+        musiccast: MusicCastDevice,
+        zone_id: str,
+        media_content_id: str,
+        search_string: str,
+        list_len: int = 8,
+    ) -> MusicCastMediaContent:
+        """Search with a search-capable list entry and return the results.
+
+        Parameters
+        ----------
+        musiccast
+            The device.
+        zone_id
+            Zone used for list control.
+        media_content_id
+            Content id of a list entry with ``can_search``, or ``input:<source>`` to use the first search-capable
+            entry of the input's root menu (e.g. TIDAL's "Search").
+        search_string
+            Text to search for.
+        list_len
+            Number of results per page.
+
+        Returns
+        -------
+        MusicCastMediaContent
+            The first page of results. Their content ids hold the search text, so they can be browsed and played
+            later, even after other searches.
+
+        Raises
+        ------
+        ValueError
+            If there is no search-capable entry to search with.
+        """
+        parts = media_content_id.split(":")
+        if parts[0] == "input" and len(parts) == 2:
+            source = parts[1]
+            navigator = ListNavigator(musiccast, zone_id, source)
+            async with navigator.lock:
+                data = await navigator.goto(())
+                entries = await navigator.read(data, 0, int(data.get("max_line", 0)))
+            index = next(
+                (i for i, info in enumerate(entries) if _attribute(info) & ATTRIBUTE_SEARCHABLE),
+                None,
+            )
+            if index is None:
+                raise ValueError(f"{source} has no search-capable entry in its root menu")
+            steps: tuple[Step, ...] = (search_step(index),)
+        else:
+            source, entry_steps, start, _query = parse_path_content_id(parts)
+            last = entry_steps[-1] if entry_steps else None
+            if start is not None or not isinstance(last, int):
+                raise ValueError(f"Not a list entry: {media_content_id}")
+            if any(is_search_step(step) for step in entry_steps[:-1]):
+                raise ValueError(f"Searching within search results is not supported: {media_content_id}")
+            navigator = ListNavigator(musiccast, zone_id, source)
+            async with navigator.lock:
+                data = await navigator.goto(entry_steps[:-1])
+                entry = next(iter(await navigator.read(data, last, 1)), {})
+            if not _attribute(entry) & ATTRIBUTE_SEARCHABLE:
+                raise ValueError(f"List entry is not capable of search: {media_content_id}")
+            steps = (*entry_steps[:-1], search_step(last))
+
+        return await cls._browse_path(musiccast, zone_id, source, steps, 0, search_string, list_len)
 
     @classmethod
     def categories(cls, musiccast: MusicCastDevice, zone_id: str) -> MusicCastMediaContent:
