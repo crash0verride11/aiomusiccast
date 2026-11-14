@@ -96,6 +96,7 @@ COMMANDS: list[tuple[str, tuple[Any, ...], str | tuple[str, Any], DeviceFeature 
     ("select_list_item", ("3", "main"), NetUSB.set_list_control("main", "select", "3", "main"), None),
     ("return_in_list", ("main",), NetUSB.set_list_control("main", "return", "", "main"), None),
     ("play_list_media", ("3", "main"), NetUSB.set_list_control("main", "play", "3", "main"), None),
+    ("search_list_item", ("Miles", 2), NetUSB.set_search_string("Miles", "main", 2), None),
 ]
 
 
