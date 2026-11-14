@@ -38,6 +38,15 @@ added features. Where a feature applies to Home Assistant, support for it has be
 [yamaha-musiccast-co](https://github.com/crash0verride11/yamaha-musiccast-co), a custom component version of the
 integration that can be installed through HACS.
 
+## AI transparency
+
+Within the last year I've more heavily used AI to work on this library. I'm a code-savvy, python-literate amateur who
+knows enough to spot when Claude is being a complete idiot, writing some convoluted insanity, or just making bad
+judgment calls. I review the code committed, excluding tests, where I only guide it to keep them practical instead of
+exhaustive; often run against responses captured from my own receiver. I let AI write some of the more tedious fixes and
+the ports of upstream pull requests and other forks' changes, making sure appropriate credit is added. AI is not where I
+started, but I wouldn't have had the time to keep this project up without it.
+
 # Setup
 
 ## Requirements
