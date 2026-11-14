@@ -31,6 +31,13 @@ from its last release (0.15.0) under a new name.
 
 See the [changelog](https://github.com/crash0verride11/aiomusiccast/blob/aiomusiccast-co/CHANGELOG.md) for details.
 
+## Home Assistant
+
+Home Assistant's core Yamaha MusicCast integration still uses upstream `aiomusiccast`, so it doesn't get these
+added features. Where a feature applies to Home Assistant, support for it has been added to
+[yamaha-musiccast-co](https://github.com/crash0verride11/yamaha-musiccast-co), a custom component version of the
+integration that can be installed through HACS.
+
 # Setup
 
 ## Requirements
