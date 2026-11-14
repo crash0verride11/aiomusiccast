@@ -4,9 +4,17 @@ from __future__ import annotations
 
 import pytest
 
+from aiomusiccast_co.list_navigation import ListNavigator
 from aiomusiccast_co.musiccast_device import MusicCastDevice
 
 from .common import FakeYxc, add_missing_features, create_device, load_device_fixtures
+
+
+@pytest.fixture(autouse=True)
+def fast_list_navigation(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Read list info without pauses while walking a list, and give up on an unreachable layer quickly."""
+    monkeypatch.setattr(ListNavigator, "POLL_INTERVAL", 0)
+    monkeypatch.setattr(ListNavigator, "STEP_TIMEOUT", 0.1)
 
 
 @pytest.fixture
